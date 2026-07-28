@@ -1,0 +1,19 @@
+[Unit]
+Description=TigerVNC server on display :%i
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=forking
+User=fiam
+Group=fiam
+PAMName=login
+PIDFile=/home/fiam/.vnc/%H:%i.pid
+ExecStartPre=-/usr/bin/vncserver -kill :%i
+ExecStart=/usr/bin/vncserver :%i -localhost no -geometry 1280x800 -depth 24
+ExecStop=/usr/bin/vncserver -kill :%i
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

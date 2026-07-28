@@ -1,0 +1,76 @@
+# =============================================================================
+# .gitignore — FVE Elektrárna Dashboard
+# =============================================================================
+
+# --- Tajný soubor s hesly a tokeny (NIKDY necommitovat!) ---
+secrets.py
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+*.egg
+
+# --- Virtuální prostředí ---
+fve-env/
+venv/
+env/
+.venv/
+
+# --- Databáze (SQLite — obsahuje reálná data) ---
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+
+# --- Logy ---
+*.log
+*.log.*
+*.tmp
+
+# --- IDE / Editory ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# --- Pomocné nástroje (CodeWhale, DeepSeek, Cline, Codex) ---
+.codewhale/
+.deepseek/
+.claude/
+.cline/
+.codex/
+.cursor/
+.copilot/
+
+# --- OS ---
+Thumbs.db
+desktop.ini
+.DS_Store
+*.bak
+
+# --- Dočasné skripty (prefix _ ) ---
+_*.ps1
+_*.py
+_*.sh
+
+# --- Hesla a klíče ---
+*.pem
+*.key
+*.crt
+!*.example.*
+!*.example
+.desec_token
+.cert_email
+.cloudflared/
+*.secret
+credentials.h
+deploy/cloudflared/config.yml
+fv-peter.cz.txt
+_*.ps1

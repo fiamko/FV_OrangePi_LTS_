@@ -1,0 +1,164 @@
+﻿<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FV</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="192x192" href="/static/icons/icon-lan-192.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="/static/icons/icon-lan-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>FIAM PV</h1>
+            <div id="datetime" class="datetime"></div>
+        </header>
+
+        <main class="dashboard-grid">
+            <!-- Řádek 1: Panely -->
+            <div class="cell panel-left" style="grid-area: panelL;">
+                <img src="/static/icons/panely.png" alt="Panel L" class="icon">
+                <div class="power-value" id="powerPanelL">0 W</div>
+            </div>
+
+            <div class="cell center-top" style="grid-area: centerT;">
+                <div class="value-box" id="totalPower">0 W</div>
+                <div class="value-box" id="batteryFlow">0 M</div>
+                <div class="value-box" id="inab_W">0 W</div>
+                <div class="value-box" id="inab_A">0.0 A</div>
+                <div class="value-box" id="inab_V">0.0 V</div>
+            </div>
+
+            <div class="cell panel-right" style="grid-area: panelR;">
+                <img src="/static/icons/panely.png" alt="Panel P" class="icon" style="transform: scaleX(-1);">
+                <div class="power-value" id="powerPanelR">0 W</div>
+            </div>
+
+            <!-- Řádek 2: Měniče + Baterie -->
+            <div class="cell menic-left" style="grid-area: menicL;">
+                <img src="/static/icons/menic36.png" alt="Měnič 3.6kW" class="icon">
+                <div class="power-value" id="powerMenicL">0 W</div>
+            </div>
+
+            <div class="cell battery-center" style="grid-area: battery;">
+                <img src="/static/icons/battery.png" alt="Baterie" class="icon">
+                <div class="power-value" id="batteryVoltage">0 V</div>
+            </div>
+
+            <div class="cell menic-right" style="grid-area: menicR;">
+                <img src="/static/icons/menic30.png" alt="Měnič 3.0kW" class="icon">
+                <div class="power-value" id="powerMenicR">0 W</div>
+            </div>
+
+            <!-- Řádek 3 + 4: Spotřebiče -->
+            <div class="cell spotrebic" id="dum" style="grid-area: dum;">
+                <img src="/static/icons/home.png" alt="Dům" class="icon">
+                <div class="power-value">0 %</div>
+            </div>
+
+            <div class="cell spotrebic" id="podlaha2200" style="grid-area: podlaha2200;">
+                <div class="podlahovka-duvod" id="podlaha2200Duvod">—</div>
+                <img src="/static/icons/podlaha2200w.png" alt="Podlaha 2200W" class="icon">
+                <div class="power-value" id="podlaha2200Power">0 W</div>
+            </div>
+
+            <div class="cell spotrebic" id="virivka" style="grid-area: virivka;">
+                <div class="virivka-temp" id="virivkaTemp">--,- °C</div>
+                <img src="/static/icons/virivka.png" alt="Vířivka" class="icon">
+                <div class="power-value">0 W</div>
+            </div>
+
+            <div class="cell spotrebic" id="bojler" style="grid-area: bojler;">
+                <img src="/static/icons/bojler.png" alt="Bojler" class="icon">
+                <div class="power-value">0 W</div>
+            </div>
+
+            <div class="cell spotrebic" id="podlaha2000" style="grid-area: podlaha2000;">
+                <img src="/static/icons/podlaha2000w.png" alt="Podlaha 2000W" class="icon">
+                <div class="power-value">0 W</div>
+            </div>
+
+            <div class="cell spotrebic" id="podlaha300" style="grid-area: podlaha300;">
+                <img src="/static/icons/podlaha300w.png" alt="Podlaha 300W" class="icon">
+                <div class="power-value">0 W</div>
+            </div>
+
+    <!-- SVG s pevnými rozměry 300x500 -->
+    <svg class="energy-flow-svg" viewBox="0 0 300 500" width="300" height="500" preserveAspectRatio="none">
+        <defs>
+            <marker id="arrowhead" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto">
+                <polygon points="0 0, 6 2, 0 4" fill="currentColor"/>
+            </marker>
+            <marker id="arrowhead-reverse" markerWidth="6" markerHeight="4" refX="1" refY="2" orient="auto">
+                <polygon points="6 0, 0 2, 6 4" fill="currentColor"/>
+            </marker>
+        </defs>
+
+    <rect id="ina-frame" x="113" y="-3" width="68" height="64" rx="5" class="ina-border" />
+
+
+                <!-- Přesné čáry mezi pravidelně rozmístěnými ikonami -->
+                <g class="energy-flow" id="flow-panelL-menicL">
+    <path d="M33,0 L18,0 L17,113 L33,113" class="flow-line"/>
+    <text x="18" y="57" class="flow-value hidden-flow-value">?? W</text>
+                </g>
+                <g class="energy-flow" id="flow-panelR-menicR">
+    <path d="M258,0 L276,0 L276,113 L261,113" class="flow-line"/>
+    <text x="275" y="57" class="flow-value hidden-flow-value">?? W</text>
+                </g>
+                <g class="energy-flow" id="flow-menicL-battery">
+    <path d="M73,113 L133,113" class="flow-line"/>
+    <text x="100" y="110" dy="-3" class="flow-value">?? A</text>
+                </g>
+                 <g class="energy-flow" id="flow-menicR-battery">
+    <path d="M222,113 L163,113" class="flow-line"/>
+    <text x="193" y="110" class="flow-value">?? A</text>
+                </g>
+                <g class="energy-flow" id="flow-menicL-dum">
+    <path d="M49,136 L49,210" class="flow-line"/>
+    <text x="38" y="200" class="flow-value hidden-flow-value">0 W</text>
+                </g>
+                <g class="energy-flow" id="flow-menicL-bojler">
+    <path d="M53,136 L53,176 L91,176 L91,354 L68,354" class="flow-line"/>
+    <text x="95" y="310" class="flow-value">0 W</text>
+                </g>
+                <g class="energy-flow" id="flow-menicL-podlaha2200">
+    <path d="M65,136 L65,164 L103,164 L103,232 L128,232" class="flow-line"/>
+    <text x="95" y="200" class="flow-value hidden-flow-value">0 W</text>
+                </g>
+                <g class="energy-flow" id="flow-menicR-podlaha2000">
+    <path d="M57,136 L57,172 L95,171 L95,354 L127,354" class="flow-line"/>
+    <text x="95" y="320" class="flow-value hidden-flow-value">0 W</text>
+                </g>
+                <g class="energy-flow" id="flow-menicR-podlaha300">
+    <path d="M61,136 L61,168 L99,168 L99,297 L193,297 L223,333" class="flow-line"/>
+    <text x="150" y="290" class="flow-value">0 W</text>
+                </g>
+                <g class="energy-flow" id="flow-menicR-virivka">
+    <path d="M240,135 L240,210" class="flow-line"/>
+                </g>
+            </svg>
+        </main>
+
+        <footer class="footer">
+            <a href="/nastaveni" class="btn">Nastavení</a>
+            <a href="/statistiky" class="btn">Statistiky</a>
+        </footer>
+    </div>
+
+    <script src="/static/dashboard.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/static/sw.js');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+[Unit]
+Description=FVE inverter data reader (MQTT publisher)
+Documentation=https://github.com/pedude/FV_elektrarna
+After=network-online.target mosquitto.service dev-ttyUSB0.device
+Wants=network-online.target dev-ttyUSB0.device
+Requires=mosquitto.service
+
+[Service]
+Type=simple
+User=fiam
+Group=fiam
+WorkingDirectory=/home/fiam/menic_web
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/home/fiam/menic_web/fve-env/bin/python /home/fiam/menic_web/mqtt_menic1.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

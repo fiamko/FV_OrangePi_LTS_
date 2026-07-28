@@ -1,0 +1,17 @@
+# =============================================================================
+# Cloudflare Tunnel — konfigurační šablona
+#
+# Zkopíruj na OPI:  cp config.example.yml /home/fiam/.cloudflared/config.yml
+#                   a uprav tunnel + ingress
+# =============================================================================
+tunnel: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
+credentials-file: /home/fiam/.cloudflared/XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX.json
+
+ingress:
+  - hostname: zarizeni.tvoje-domena.cz
+    service: http://192.168.0.???:80
+  - hostname: tvoje-domena.cz
+    service: http://localhost:5000
+  - hostname: "*.tvoje-domena.cz"
+    service: http://localhost:5000
+  - service: http_status:404

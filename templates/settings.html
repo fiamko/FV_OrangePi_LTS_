@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nastaveni FVE</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="container settings-container settings-page">
+  <div class="settings-topbar">
+    <div class="season-loads">
+      <a href="/nastaveni?profile=jaro" class="btn small-btn {% if selected_profile == 'jaro' %}active-season{% endif %}">Jaro</a>
+      <a href="/nastaveni?profile=leto" class="btn small-btn {% if selected_profile == 'leto' %}active-season{% endif %}">Leto</a>
+      <a href="/nastaveni?profile=podzim" class="btn small-btn {% if selected_profile == 'podzim' %}active-season{% endif %}">Podzim</a>
+      <a href="/nastaveni?profile=zima" class="btn small-btn {% if selected_profile == 'zima' %}active-season{% endif %}">Zima</a>
+    </div>
+    <form action="/reset-settings" method="POST" onsubmit="var p=prompt('Zadej heslo pro reset:');if(!p)return false;this.querySelector('input[name=password]').value=p;return confirm('Obnovit vychozi nastaveni?');">
+      <input type="hidden" name="password" value="">
+      <button type="submit" class="btn small-btn danger-btn">Reset</button>
+    </form>
+  </div>
+
+  <h2>Nastaveni</h2>
+
+  {% if errors %}
+  <div class="settings-errors">
+    {% for error in errors %}
+    <div>{{ error }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <form action="/uloz" method="POST" id="settings-form">
+    <input type="hidden" name="selected_profile" value="{{ selected_profile or '' }}">
+    <input type="hidden" name="password" id="settings-password" value="">
+
+    <div class="season-saves">
+      <button type="submit" name="action" value="save_profile:jaro" class="btn small-btn danger-btn">Uloz Jaro</button>
+      <button type="submit" name="action" value="save_profile:leto" class="btn small-btn danger-btn">Uloz Leto</button>
+      <button type="submit" name="action" value="save_profile:podzim" class="btn small-btn danger-btn">Uloz Podzim</button>
+      <button type="submit" name="action" value="save_profile:zima" class="btn small-btn danger-btn">Uloz Zima</button>
+    </div>
+
+    <div class="power-value">
+      <label>Ridit podle:</label>
+      <select name="rizeni_podle">
+        <option value="batteryVoltage" {% if settings.rizeni_podle == 'batteryVoltage' %}selected{% endif %}>Napeti baterie</option>
+        <option value="batteryFlow" {% if settings.rizeni_podle == 'batteryFlow' %}selected{% endif %}>SOC baterie</option>
+        <option value="inaB_V" {% if settings.rizeni_podle == 'inaB_V' %}selected{% endif %}>INA napeti</option>
+      </select>
+    </div>
+
+    <div class="power-value">
+      <label>Hystereze cas (s):</label><input type="number" name="hystereze_s" value="{{ settings.hystereze_s }}" min="0" max="3600" step="1">
+    </div>
+
+    <div class="power-value">
+      <label>Interval historie (s):</label><input type="number" name="sample_interval_s" value="{{ settings.sample_interval_s }}" min="1" max="3600" step="1">
+    </div>
+
+    <div class="power-value">
+      <label>Kapacita baterie (Ah):</label><input type="number" name="battery_capacity_ah" value="{{ settings.battery_capacity_ah }}" min="1" max="2000" step="1">
+    </div>
+
+    <div class="power-value">
+      <label>Zapni Podlaha300W (V):</label><input type="number" name="zapni4" value="{{ settings.zapni4 }}" min="24.00" max="28.00" step="0.01">
+    </div>
+
+    <div class="power-value">
+      <label>Vypni Podlaha300W (V):</label><input type="number" name="vypni4" value="{{ settings.vypni4 }}" min="24.00" max="28.00" step="0.01">
+    </div>
+
+    <div class="power-value">
+      <label>Zapni Podlaha 2000 (V):</label><input type="number" name="zapni2" value="{{ settings.zapni2 }}" min="24.00" max="28.00" step="0.01">
+    </div>
+
+    <div class="power-value">
+      <label>Vypni Podlaha 2000 (V):</label><input type="number" name="vypni2" value="{{ settings.vypni2 }}" min="24.00" max="28.00" step="0.01">
+    </div>
+
+    <div class="power-value">
+      <label>Zapni Podlaha 2200 (V):</label><input type="number" name="zapni3" value="{{ settings.zapni3 }}" min="24.00" max="28.00" step="0.01">
+    </div>
+
+    <div class="power-value">
+      <label>Vypni Podlaha 2200 (V):</label><input type="number" name="vypni3" value="{{ settings.vypni3 }}" min="24.00" max="28.00" step="0.01">
+    </div>
+
+    <div class="power-value">
+      <label>Zapni Bojler (V):</label><input type="number" name="zapni_bojler" value="{{ settings.zapni_bojler }}" min="24.00" max="28.00" step="0.01">
+    </div>
+
+    <div class="power-value">
+      <label>Vypni Bojler (V):</label><input type="number" name="vypni_bojler" value="{{ settings.vypni_bojler }}" min="24.00" max="28.00" step="0.01">
+    </div>
+
+    <div class="power-value">
+      <label>Zapni Virivka (V):</label><input type="number" name="zapni_virivka" value="{{ settings.zapni_virivka }}" min="24.00" max="28.00" step="0.01">
+    </div>
+
+    <div class="power-value">
+      <label>Vypni Virivka (V):</label><input type="number" name="vypni_virivka" value="{{ settings.vypni_virivka }}" min="24.00" max="28.00" step="0.01">
+    </div>
+
+    <div class="power-value">
+      <label>Zapni Menic 2 (W):</label><input type="number" name="zapni_rele" value="{{ settings.zapni_rele }}" min="0" max="5000" step="0.1">
+    </div>
+
+    <div class="power-value">
+      <label>Vypni Menic 2 (W):</label><input type="number" name="vypni_rele" value="{{ settings.vypni_rele }}" min="0" max="5000" step="0.1">
+    </div>
+
+    <div class="power-value">
+      <label>Prikon bojler (W):</label><input type="number" name="power_bojler" value="{{ settings.power_bojler }}" min="0" max="5000" step="1">
+    </div>
+
+    <div class="power-value">
+      <label>Prikon virivka (W):</label><input type="number" name="power_virivka" value="{{ settings.power_virivka }}" min="0" max="5000" step="1">
+    </div>
+
+    <div class="power-value">
+      <label>Prikon podlaha 300 (W):</label><input type="number" name="power_podlaha300" value="{{ settings.power_podlaha300 }}" min="0" max="5000" step="1">
+    </div>
+
+    <div class="power-value">
+      <label>Prikon podlaha 2000 (W):</label><input type="number" name="power_podlaha2000" value="{{ settings.power_podlaha2000 }}" min="0" max="5000" step="1">
+    </div>
+
+    <div class="power-value">
+      <label>Prikon podlaha 2200 (W):</label><input type="number" name="power_podlaha2200" value="{{ settings.power_podlaha2200 }}" min="0" max="5000" step="1">
+    </div>
+
+    {% if esp_devices %}
+    <div class="card" style="margin-top:20px;">
+      <h2 style="color:#aaa;font-size:14px;margin:0 0 10px;border-bottom:1px solid #333;padding-bottom:5px;">🔧 ESP zařízení</h2>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      {% for dev in esp_devices %}
+        {% if "fv-peter" in request.host %}
+        <a href="https://{{ dev.subdomain }}.fv-peter.cz" target="_blank" class="btn small-btn" style="background:#1a3a2e;color:#4ecca3;border:1px solid #2a5a4a;">{{ dev.name }}</a>
+        {% else %}
+        <a href="http://{{ dev.ip }}" target="_blank" class="btn small-btn" style="background:#1a2e3a;color:#4ea3cc;border:1px solid #2a4a5a;">{{ dev.name }}</a>
+        {% endif %}
+      {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="save-row">
+      <button type="submit" name="action" value="save_active" class="btn">Uloz a zpet</button>
+      <a href="/" class="btn">Zpet</a>
+    </div>
+  </form>
+</div>
+  <script src="/static/settings.js"></script>
+</body>
+</html>

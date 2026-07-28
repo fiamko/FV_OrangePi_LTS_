@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nastaveni ulozeno</title>
+</head>
+<body style="font-family: Arial; padding: 20px;">
+  <h1>Nastaveni ulozeno</h1>
+  <p>Hodnoty byly zapsany do souboru <code>config.json</code>.</p>
+  <ul>
+    <li>Podlaha 300W zapni: {{ submitted.zapni4 }} V</li>
+    <li>Podlaha 300W vypni: {{ submitted.vypni4 }} V</li>
+    <li>Podlaha 2000W zapni: {{ submitted.zapni2 }} V</li>
+    <li>Podlaha 2000W vypni: {{ submitted.vypni2 }} V</li>
+    <li>Podlaha 2200W zapni: {{ submitted.zapni3 }} V</li>
+    <li>Podlaha 2200W vypni: {{ submitted.vypni3 }} V</li>
+    <li>Menic 2 zapni: {{ submitted.zapni_rele }} W</li>
+    <li>Menic 2 vypni: {{ submitted.vypni_rele }} W</li>
+  </ul>
+  <a href="/nastaveni">Zpet na nastaveni</a><br>
+  <a href="/">Zpet na hlavni stranku</a>
+</body>
+</html>

@@ -1,0 +1,20 @@
+# =============================================================================
+# Caddyfile pro FVE dashboard — HTTPS přes Let's Encrypt DNS-01 challenge
+# Doména:   fiam-opi.dedyn.io
+# Backend:  Flask na localhost:5000
+# =============================================================================
+
+fiam-opi.dedyn.io {
+    tls /etc/caddy/fve-bundle.crt /etc/caddy/fve-bundle.key
+
+    reverse_proxy localhost:5000
+
+    log {
+        output file /var/log/caddy/fve-access.log
+        level INFO
+    }
+}
+
+http://fiam-opi.dedyn.io {
+    redir https://{host}{uri} permanent
+}

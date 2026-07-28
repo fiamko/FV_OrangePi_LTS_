@@ -1,0 +1,12 @@
+# Toto je SABLONA. Skutecny token NIKDY necommituj do gitu!
+# 
+# Postup na OPI:
+#   1. Zkopiruj tento soubor: cp .desec_token.example /home/fiam/.desec_token
+#   2. Nahrad "tvuj-token" skutecnym tokenem z https://desec.io/domains
+#   3. Nastav prava: chmod 600 /home/fiam/.desec_token
+#
+# Postup na Windows PC (pro _check_dns.ps1):
+#   1. Zkopiruj .desec_token.example do stejne slozky jako _check_dns.ps1
+#   2. Pojmenuj ho .desec_token (bez pripony)
+#   3. Nahrad "tvuj-token" skutecnym tokenem
+tvuj-token

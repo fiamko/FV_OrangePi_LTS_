@@ -1,0 +1,16 @@
+[Unit]
+Description=Cloudflare Tunnel for FVE Dashboard
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=notify
+User=fiam
+Group=fiam
+ExecStart=/home/fiam/.local/bin/cloudflared tunnel run fve-tunnel
+Restart=always
+RestartSec=5
+TimeoutStartSec=0
+
+[Install]
+WantedBy=multi-user.target

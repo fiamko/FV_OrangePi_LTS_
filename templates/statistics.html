@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Statistiky FVE</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="container stats-page">
+  <header class="header">
+    <h1>Statistiky</h1>
+    <div style="display:flex; gap:6px;">
+      <a href="/statistiky/detail" class="btn small-btn">Detail</a>
+      <a href="/" class="btn small-btn">Zpet</a>
+    </div>
+  </header>
+
+  <main class="stats-content">
+    <section class="stats-block">
+      <h2>Dnes</h2>
+      <div class="stats-grid">
+        <div class="stats-item"><span>PV1</span><strong>{{ stats.today.pv1_kwh }} kWh</strong></div>
+        <div class="stats-item"><span>PV2</span><strong>{{ stats.today.pv2_kwh }} kWh</strong></div>
+        <div class="stats-item"><span>Vyroba celkem</span><strong>{{ stats.today.pv_total_kwh }} kWh</strong></div>
+        <div class="stats-item"><span>Dum</span><strong>{{ stats.today.house_kwh }} kWh</strong></div>
+        <div class="stats-item"><span>Cykly baterie</span><strong>{{ stats.today.battery_cycles }}</strong></div>
+        <div class="stats-item"><span>Menic 2 povolen</span><strong>{{ stats.today.menic2_h }} h</strong></div>
+      </div>
+    </section>
+
+    <section class="stats-block">
+      <h2>Poslednich 24 h</h2>
+      <div class="stats-grid">
+        <div class="stats-item"><span>Vyroba celkem</span><strong>{{ stats.last_24h.pv_total_kwh }} kWh</strong></div>
+        <div class="stats-item"><span>Dum</span><strong>{{ stats.last_24h.house_kwh }} kWh</strong></div>
+        <div class="stats-item"><span>Bojler</span><strong>{{ stats.last_24h.bojler_kwh }} kWh</strong></div>
+        <div class="stats-item"><span>Virivka</span><strong>{{ stats.last_24h.virivka_kwh }} kWh</strong></div>
+        <div class="stats-item"><span>Podlahy</span><strong>{{ stats.last_24h.podlaha300_kwh + stats.last_24h.podlaha2000_kwh + stats.last_24h.podlaha2200_kwh }} kWh</strong></div>
+        <div class="stats-item"><span>Cykly baterie</span><strong>{{ stats.last_24h.battery_cycles }}</strong></div>
+      </div>
+    </section>
+
+    <section class="stats-block">
+      <h2>Poslednich 30 dni</h2>
+      <div class="stats-grid">
+        <div class="stats-item"><span>Vyroba celkem</span><strong>{{ stats.last_30d.pv_total_kwh }} kWh</strong></div>
+        <div class="stats-item"><span>Dum</span><strong>{{ stats.last_30d.house_kwh }} kWh</strong></div>
+        <div class="stats-item"><span>Bojler</span><strong>{{ stats.last_30d.bojler_h }} h</strong></div>
+        <div class="stats-item"><span>Podlaha 300</span><strong>{{ stats.last_30d.podlaha300_h }} h</strong></div>
+        <div class="stats-item"><span>Podlaha 2000</span><strong>{{ stats.last_30d.podlaha2000_h }} h</strong></div>
+        <div class="stats-item"><span>Podlaha 2200</span><strong>{{ stats.last_30d.podlaha2200_h }} h</strong></div>
+        <div class="stats-item"><span>Virivka</span><strong>{{ stats.last_30d.virivka_h }} h</strong></div>
+        <div class="stats-item"><span>Cykly baterie</span><strong>{{ stats.last_30d.battery_cycles }}</strong></div>
+      </div>
+    </section>
+  </main>
+</div>
+</body>
+</html>

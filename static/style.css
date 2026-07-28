@@ -1,0 +1,623 @@
+/* Základní nastavení */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: #000000; /* ČERNÉ pozadí místo #f8f9fa */
+    font-family: Arial, sans-serif;
+    color: #000;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; /* místo center */
+    padding: 5px;
+    /*padding-top: 50px; /* Odsazení shora */
+}
+
+/* Hlavní kontejner s pevnými rozměry */
+.container {
+    border: 3px solid #000;
+    border-radius: 10px;
+    box-shadow: 0 0 0 5px #999, /* ČERNÝ vnější stín */
+                4px 4px 8px rgba(255,255,255,1); /* Bílý stín pro kontrast */
+    background: #e8e9ea;
+    width: 300px;  /* PEVNÁ ŠÍŘKA */
+    height: 455px; /* PEVNÁ VÝŠKA */
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+    box-sizing: border-box; /* Zahrnuje padding a border do výšky */
+    /*margin: 20px auto; /* Centrování a odsazení od okraje */
+}
+
+/* MOBIL (výchozí) - žádné změny */
+@media (max-width: 767px) {
+    .container {
+        width: 300px;
+        height: 455px;
+        margin: 0 auto;
+    }
+}
+
+/* TABLET - zvětšení */
+@media (min-width: 768px) and (max-width: 1024px) {
+    .container {
+        transform: scale(2.5);
+        transform-origin: center center;
+        margin: 0px auto;
+        margin-top: 50px;
+    }
+}
+
+/* VELKÉ TABLETY - větší zvětšení */
+@media (min-width: 1025px) and (max-width: 1366px) {
+    .container {
+        transform: scale(1.8);
+        transform-origin: center center;
+        margin: 170px auto;
+    }
+}
+
+/* PC - centrování */
+@media (min-width: 1367px) {
+    body {
+        padding: 40px;
+    }
+    .container {
+        transform: scale(0.85);
+        margin: 0 auto;
+    }
+}
+
+.settings-container {
+  background: #a8a9aa;
+  padding: 8px;
+}
+
+/* Záhlaví */
+.header {
+    background: #34495e;
+    padding: 5px 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #000;
+    height: 20px; /* PEVNÁ VÝŠKA */
+    flex-shrink: 0;
+}
+
+.header h1 {
+    font-size: 1.0em;
+    font-weight: bold;
+    color: #fff;
+}
+
+.datetime {
+    font-size: 0.8em;
+    color: #fff;
+    align-items: right;
+}
+
+.wakelock-btn {
+    color: #fff;
+    background: #1c2e40;
+    border: 1px solid #fff;
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-size: 0.65em;
+    font-weight: bold;
+    line-height: 1.2;
+}
+
+/* Hlavní mřížka - CSS Grid s pevnými pozicemi */
+.dashboard-grid {
+    flex: 1;
+    display: grid;
+    grid-template-areas:
+        "panelL centerT panelR"
+        "menicL battery menicR"
+        "dum podlaha2200 virivka"
+        "bojler podlaha2000 podlaha300";
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr 1fr 1fr;
+    gap: 8px;
+    padding: 10px;
+    position: relative;
+}
+
+/* Buňky - pravidelné rozložení */
+.cell {
+    display: flex;
+    flex-direction: column;
+    /*border: 1px solid #aaa;*/
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 2;
+}
+
+/* Přiřazení grid areas jednotlivým buňkám */
+.panel-left { grid-area: panelL; }
+.center-top { grid-area: centerT; }
+.panel-right { grid-area: panelR; }
+.menic-left { grid-area: menicL; }
+.battery-center { grid-area: battery; }
+.menic-right { grid-area: menicR; }
+.dum { grid-area: dum; }
+.podlaha2200 { grid-area: podlaha2200; }
+.virivka { grid-area: virivka; }
+
+/* Teplota nad ikonou vířivky */
+.virivka-temp {
+    font-size: 9px;
+    color: #444;           /* tmavě šedá — neohřívá */
+    text-align: center;
+    margin-bottom: 1px;
+}
+.virivka-temp.on {
+    color: #2980b9;        /* modrá (stejná jako toky energie) — ohřívá */
+}
+
+/* Důvod stavu nad ikonou podlahovky */
+.podlahovka-duvod {
+    font-size: 8px;
+    color: #555;           /* tmavě šedá — informační, jako teplota */
+    text-align: center;
+    margin-bottom: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.bojler { grid-area: bojler; }
+.podlaha2000 { grid-area: podlaha2000; }
+.podlaha300 { grid-area: podlaha300; }
+
+/* Ikony */
+.icon {
+    width: 40px;
+    height: 35px;
+    transition: all 0.3s ease;
+    margin: 2px;
+}
+
+.icon.inactive {
+    opacity: 0.3;
+}
+
+.power-value {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    font-size: 0.8em;
+    font-weight: bold;
+    margin-top: 2px;
+}
+
+.power-value label {
+    min-width: 150px; /* nebo jiná hodnota podle nejdelšího textu */
+    flex-shrink: 0; /* zabrání zmenšování */
+}
+
+.power-value input {
+    text-align: left;
+    flex: 1; /* zabere zbývající místo */
+}
+
+.center-top .value-box {
+    background: #fff;
+    border: 1px solid #000;
+    border-radius: 4px;
+    padding: 1px 3px;
+    font-weight: bold;
+    font-size: 0.7em;
+    box-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+    margin: 1px;
+    text-align: center;
+    width: 60px;
+}
+
+#totalPower {
+    position: absolute;
+    height: 18px;
+    top: -3px;
+}
+/* reset pspadu */
+
+#batteryFlow {
+    position: absolute;
+    height: 18px;
+    top: 17px;
+}
+
+#inab_W {
+    font-size: 0.6em;
+    font-weight: bold;
+    position: absolute;
+    height: 15px;
+    top: 38px;
+}
+
+#inab_A {
+    font-size: 0.6em;
+    font-weight: bold;
+    position: absolute;
+    height: 15px;
+    top: 53px;
+}
+
+#inab_V {
+    font-size: 0.6em;
+    font-weight: bold;
+    position: absolute;
+    height: 15px;
+    top: 69px;
+}
+
+/* SVG s tokem energie - PEVNÉ ROZMĚRY */
+.energy-flow-svg {
+    position: absolute;
+    top: 50px; /* Pod záhlavím */
+    left: 0;
+    width: 300px;
+    height: 400px; /* 500 - 50 (header) - 50 (footer) */
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Základní styl toků */
+.energy-flow {
+    opacity: 0.3;
+    transition: opacity 0.3s ease;
+}
+
+.energy-flow.active {
+    opacity: 1;
+}
+
+/* Čáry toků */
+.flow-line {
+    fill: none;
+    stroke-width: 2;
+    stroke-dasharray: 6, 3;
+    stroke-linecap: round;
+    stroke: #a0a0a0;
+    animation: none;
+}
+
+/* Aktivní stavy */
+.flow-line.active {
+    animation: flowMove 2s linear infinite;
+}
+
+.flow-line.charging {
+    stroke: #27ae60;
+}
+
+.flow-line.discharging {
+    stroke: #e74c3c;
+    animation-direction: reverse;
+}
+
+.flow-line.standard {
+    stroke: #2980b9;
+}
+
+/*.flow-line.discharging.active {
+}  */
+
+/* Obousměrné toky */
+.flow-line.bidirectional.active.charging {
+    marker-end: url(#arrowhead);
+}
+
+.flow-line.bidirectional.active.discharging {
+    marker-end: url(#arrowhead-reverse);
+}
+
+/* Animace pohybu */
+@keyframes flowMove {
+    0% {
+        stroke-dashoffset: 0;
+    }
+    100% {
+        stroke-dashoffset: -9;
+    }
+}
+
+/* Čísla na tokách */
+.flow-value {
+    font-size: 10px;
+    font-weight: bold;
+    fill: #000;
+    text-anchor: middle;
+    dominant-baseline: middle;
+    opacity: 0.3;
+    transition: opacity 0.3s ease;
+}
+
+.energy-flow.active .flow-value {
+    opacity: 1;
+}
+.hidden-flow-value {
+    display: none;
+}
+
+/* Zápatí */
+.footer {
+    background: #34495e;
+    padding: 5px;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    border-top: 2px solid #000;
+    height: 35px; /* PEVNÁ VÝŠKA */
+    flex-shrink: 0;
+}
+
+.btn {
+    color: #fff;
+    text-decoration: none;
+    font-weight: bold;
+    padding: 2px 12px;
+    border: 1px solid #fff;
+    border-radius: 4px;
+    background: #1c2e40;
+    transition: all 0.3s ease;
+    font-size: 0.9em;
+}
+
+.btn:hover {
+    background: #0033ff;
+}
+
+/* Tablet optimizace */
+@media (min-width: 768px) and (max-width: 1024px) {
+    .container {
+        transform: scale(1.2);
+        transform-origin: center center;
+    }
+}
+
+/* Velké obrazovky - centrování */
+@media (min-width: 1025px) {
+    body {
+        padding: 20px;
+    }
+}
+
+/* Mobilní zařízení - výchozí stav (300x500) */
+@media (max-width: 767px) {
+    .container {
+        width: 300px;
+        height: 455px;
+    }
+}
+
+.ina-border {
+    /*fill: rgba(255, 255, 255, 0.1);  barva výplně a její opacity
+    stroke: #999999;               /* barva čáry (např. zelená jako INA) */*/
+     /*stroke-width: 1;               tloušťka čáry */
+    /*stroke-dasharray: 5, 5;*/        /* volitelně: přerušovaná čára */
+    opacity: 0.8;                  /* celková průhlednost prvku */
+}
+
+.ina-border {
+    fill: none;
+    stroke-width: 2;
+    transition: stroke 0.5s ease; /* Plynulá změna barvy */
+}
+
+.ina-border.charging { stroke: #27ae60 !important; }    /* Zelená */
+.ina-border.discharging { stroke: #e74c3c !important; } /* Červená */
+
+.ina-border.alarm {
+    animation: pulse-alarm 1s infinite alternate;
+}
+
+.settings-page {
+    width: 360px;
+    height: auto;
+    min-height: 455px;
+    overflow: visible;
+}
+
+.settings-topbar,
+.season-loads,
+.season-saves,
+.save-row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.settings-topbar {
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.season-saves {
+    margin: 8px 0;
+}
+
+.save-row {
+    justify-content: center;
+    margin-top: 10px;
+}
+
+.small-btn {
+    padding: 2px 8px;
+    font-size: 0.72em;
+}
+
+.danger-btn {
+    background: #7b1f1f;
+}
+
+.danger-btn:hover {
+    background: #a32222;
+}
+
+.active-season {
+    background: #145a7a;
+}
+
+.settings-errors {
+    background: #ffd9d9;
+    border: 1px solid #992222;
+    color: #551111;
+    padding: 6px;
+    margin-bottom: 8px;
+    font-size: 0.75em;
+}
+
+.settings-page .power-value select {
+    text-align: left;
+    flex: 1;
+}
+
+.stats-page {
+    width: 360px;
+    height: auto;
+    min-height: 455px;
+}
+
+.stats-content {
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.stats-block {
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid #7d8a91;
+    border-radius: 6px;
+    padding: 8px;
+}
+
+.stats-block h2 {
+    font-size: 0.95em;
+    margin-bottom: 6px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+}
+
+.stats-item {
+    display: flex;
+    flex-direction: column;
+    background: #f3f4f6;
+    border: 1px solid #c0c7cd;
+    border-radius: 4px;
+    padding: 5px 6px;
+    min-height: 42px;
+}
+
+.stats-item span {
+    font-size: 0.68em;
+    color: #33434f;
+}
+
+.stats-item strong {
+    font-size: 0.82em;
+    color: #111;
+}
+
+.stats-table-wrap {
+    overflow-x: auto;
+}
+
+.stats-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.72em;
+}
+
+.stats-table th,
+.stats-table td {
+    border: 1px solid #b7c0c7;
+    padding: 4px 6px;
+    text-align: left;
+    background: #f4f5f6;
+}
+
+.stats-table th {
+    background: #dce2e7;
+}
+
+@keyframes pulse-alarm {
+    from { stroke-width: 2; stroke-opacity: 1; }
+    to { stroke-width: 5; stroke-opacity: 0.5; stroke: #ff0000; }
+}
+
+.settings-page {
+    width: 360px;
+    height: auto;
+    min-height: 455px;
+    overflow: visible;
+}
+
+.settings-topbar,
+.season-loads,
+.season-saves,
+.save-row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.settings-topbar {
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.season-saves {
+    margin: 8px 0;
+}
+
+.save-row {
+    justify-content: center;
+    margin-top: 10px;
+}
+
+.small-btn {
+    padding: 2px 8px;
+    font-size: 0.72em;
+}
+
+.danger-btn {
+    background: #7b1f1f;
+}
+
+.danger-btn:hover {
+    background: #a32222;
+}
+
+.active-season {
+    background: #145a7a;
+}
+
+.settings-errors {
+    background: #ffd9d9;
+    border: 1px solid #992222;
+    color: #551111;
+    padding: 6px;
+    margin-bottom: 8px;
+    font-size: 0.75em;
+}
+
+.settings-page .power-value select {
+    text-align: left;
+    flex: 1;
+}
+

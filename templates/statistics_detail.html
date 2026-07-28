@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Statistiky - detail 24 h</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="container stats-page">
+  <header class="header">
+    <h1>Detail 24 h</h1>
+    <a href="/statistiky" class="btn small-btn">Zpet</a>
+  </header>
+
+  <main class="stats-content">
+    <section class="stats-block">
+      <h2>Po hodinach</h2>
+      <div class="stats-table-wrap">
+        <table class="stats-table">
+          <thead>
+            <tr>
+              <th>Hodina</th>
+              <th>PV1</th>
+              <th>PV2</th>
+              <th>Dum</th>
+              <th>Baterie</th>
+              <th>Bojler</th>
+              <th>Virivka</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in rows %}
+            <tr>
+              <td>{{ row.label }}</td>
+              <td>{{ row.pv1_kwh }} kWh</td>
+              <td>{{ row.pv2_kwh }} kWh</td>
+              <td>{{ row.house_kwh }} kWh</td>
+              <td>{{ row.battery_cycles }}</td>
+              <td>{{ row.bojler_h }} h</td>
+              <td>{{ row.virivka_h }} h</td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="7">Zatim nejsou ulozena zadna hodinova data.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+</body>
+</html>
