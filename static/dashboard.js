@@ -1,4 +1,7 @@
-﻿// Český formát data a času
+// Český formát data a času
+
+var podlahovka2200_lastDuvod = "";
+var podlahovka2200_duvodUntil = 0;
 function updateDateTime() {
     const el = document.getElementById('datetime');
     if (!el) return; // Pokud prvek neexistuje, funkce se tiše ukončí a neshodí zbytek JS
@@ -155,9 +158,26 @@ if (frame) {
     // Spotřebiče
     document.getElementById('dum').querySelector('.power-value').textContent = Math.round(data.load) + ' %';
     document.getElementById('bojler').querySelector('.power-value').textContent = formatPower(data.boiler);
-    document.getElementById('podlaha2200').querySelector('.power-value').textContent = formatPower(data.heating1);
-    const duvodEl = document.getElementById('podlaha2200Duvod');
-    if (duvodEl) duvodEl.textContent = data.podlahovka2200Duvod || '—';
+    var p2200 = data.heating1HasFeedback ? (data.heating1Actual || 0) : data.heating1;
+    document.getElementById('podlaha2200').querySelector('.power-value').textContent = formatPower(p2200);
+    var duvodEl = document.getElementById('podlaha2200Duvod');
+    if (duvodEl) {
+        var now = Date.now();
+        var cur = data.podlahovka2200Duvod || '';
+        if (cur && cur !== podlahovka2200_lastDuvod) {
+            podlahovka2200_lastDuvod = cur;
+            podlahovka2200_duvodUntil = now + 5000;
+        }
+        if (now < podlahovka2200_duvodUntil) {
+            duvodEl.textContent = cur;
+            duvodEl.className = 'podlahovka-duvod';
+        } else {
+            var tv = data.podlahovka2200TempVstup || 0;
+            var to = data.podlahovka2200TempVystup || 0;
+            duvodEl.textContent = 'in' + tv.toFixed(1) + ' | out' + to.toFixed(1);
+            duvodEl.className = 'podlahovka-duvod podlahovka-teplota';
+        }
+    }
     document.getElementById('podlaha2000').querySelector('.power-value').textContent = formatPower(data.heating2);
     document.getElementById('podlaha300').querySelector('.power-value').textContent = formatPower(data.heating3);
     // Vířivka — VŽDY skutečný odběr (proud0 × 220V), nikdy nominál!
@@ -178,6 +198,24 @@ if (frame) {
 
     // Aktualizace toků energie
     updateEnergyFlows(data);
+    // --- ESP online/offline signalizace + odkazy na subdomény ---
+    var isProduction = window.location.hostname.indexOf('fv-peter') !== -1;
+
+    document.querySelectorAll('.cell.spotrebic a.icon-link').forEach(function(a) {
+        var subdomain = a.dataset.subdomain;
+        var localIp = a.dataset.localIp;
+        var device = a.dataset.device;
+
+        a.href = isProduction
+            ? 'https://' + subdomain + '.fv-peter.cz'
+            : 'http://' + localIp;
+
+        var onlineKey = device + '_online';
+        var img = a.querySelector('.icon');
+        if (img && onlineKey in data) {
+            img.classList.toggle('inactive', !data[onlineKey]);
+        }
+    });
 }
 //----------------------------------------------
 

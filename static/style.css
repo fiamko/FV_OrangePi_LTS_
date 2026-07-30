@@ -173,6 +173,14 @@ body {
     text-overflow: ellipsis;
 }
 
+/* Zobrazení teplot podlahovky — tlusté číslice, 80% opacity */
+.podlahovka-teplota {
+    font-weight: bold;
+    opacity: 0.8;
+    color: #000;
+    font-size: 8px;
+}
+
 .bojler { grid-area: bojler; }
 .podlaha2000 { grid-area: podlaha2000; }
 .podlaha300 { grid-area: podlaha300; }

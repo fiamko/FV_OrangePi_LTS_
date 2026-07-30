@@ -31,6 +31,8 @@ def transform_mqtt_to_js(mqtt_data):
     out["heating1Actual"] = float(current_data.get("heating1_actual", 0) or 0)  # ESP stav (čára)
     out["heating1HasFeedback"] = "heating1_actual" in current_data  # true když ESP existuje
     out["podlahovka2200Duvod"] = mqtt_data.get("podlahovka2200_duvod", "")  # důvod z ESP
+    out["podlahovka2200TempVstup"] = mqtt_data.get("podlahovka2200_teplota_vstup", 0)
+    out["podlahovka2200TempVystup"] = mqtt_data.get("podlahovka2200_teplota_vystup", 0)
     out["heating2"] = float(current_data.get("heating2", 0) or 0)
     out["heating3"] = float(current_data.get("heating3", 0) or 0)
     # Vířivka — změřený výkon z ESP32 (skutečný odběr, i když je 0!)
@@ -46,5 +48,10 @@ def transform_mqtt_to_js(mqtt_data):
     out["virivkaTemp"] = round(float(mqtt_data.get("virivka_temperature", 0) or 0), 1)
     out["virivkaStatus"] = mqtt_data.get("virivka_status", "OFF")
     out["menic2Enabled"] = float(current_data.get("menic2_rele_state", 0) or 0)
+
+    # ESP online/offline statusy — uklada mqtt_service.py přímo jako bool
+    out["virivka_online"] = bool(mqtt_data.get("virivka_online", False))
+    out["podlahovka2200_online"] = bool(mqtt_data.get("podlahovka2200_online", False))
+    out["podlahovky_online"] = bool(mqtt_data.get("podlahovky_online", False))
 
     return out

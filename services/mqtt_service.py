@@ -10,13 +10,6 @@ from services.history_service import HistoryRecorder
 from services.settings_service import get_form_settings
 
 
-# MQTT broker — ze secrets.py (neni v Gitu)
-try:
-    from secrets import MQTT_BROKER, MQTT_PORT
-except ImportError:
-    MQTT_BROKER = "localhost"
-    MQTT_PORT = 1883
-
 TOPIC_PREFIXES = ("menic/1/data/", "baterie/data/")
 
 
@@ -32,6 +25,9 @@ def on_connect(client, userdata, flags, rc, properties=None):
     client.subscribe("fve/spotrebice/virivka/stav")
     client.subscribe("fve/spotrebice/podlaha2200/stav")
     client.subscribe("fve/spotrebice/podlaha2200/status")
+    client.subscribe("fve/spotrebice/podlaha2200/teplota")
+    client.subscribe("fve/spotrebice/virivka/status")
+    client.subscribe("fve/spotrebice/podlahovky/status")
 
 def on_disconnect(client, userdata, rc, properties=None):
     if rc != 0:
@@ -72,10 +68,38 @@ def on_message(client, userdata, msg):
 
         if msg.topic == "fve/spotrebice/podlaha2200/status":
             payload = json.loads(msg.payload.decode())
-            if isinstance(payload, dict) and payload.get("status") == "offline":
+            if isinstance(payload, dict):
+                online = payload.get("status") == "online"
                 with data_lock:
-                    current_data["heating1_actual"] = 0.0
-                    current_data["heating1_state_actual"] = 0
+                    current_data["podlahovka2200_online"] = online
+                    if not online:
+                        current_data["heating1_actual"] = 0.0
+                        current_data["heating1_state_actual"] = 0
+            return
+
+        if msg.topic == "fve/spotrebice/virivka/status":
+            payload = json.loads(msg.payload.decode())
+            if isinstance(payload, dict):
+                online = payload.get("status") == "online"
+                with data_lock:
+                    current_data["virivka_online"] = online
+            return
+
+        if msg.topic == "fve/spotrebice/podlahovky/status":
+            payload = json.loads(msg.payload.decode())
+            if isinstance(payload, dict):
+                online = payload.get("status") == "online"
+                with data_lock:
+                    current_data["podlahovky_online"] = online
+            return
+
+        # === Teploty podlahovky 2200W z ESP32 ===
+        if msg.topic == "fve/spotrebice/podlaha2200/teplota":
+            payload = json.loads(msg.payload.decode())
+            if isinstance(payload, dict):
+                with data_lock:
+                    current_data["podlahovka2200_teplota_vstup"] = round(float(payload.get("vstup", 0) or 0), 1)
+                    current_data["podlahovka2200_teplota_vystup"] = round(float(payload.get("vystup", 0) or 0), 1)
             return
 
         raw_payload = msg.payload.decode()
@@ -123,7 +147,7 @@ def mqtt_worker():
     client.on_disconnect = on_disconnect
     client.on_message = on_message
     client.reconnect_delay_set(min_delay=1, max_delay=60)
-    client.connect_async(MQTT_BROKER, MQTT_PORT, 60)
+    client.connect_async("localhost", 1883, 60)
 
     client.loop_start()
 
