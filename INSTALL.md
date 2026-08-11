@@ -1,6 +1,6 @@
 ﻿# INSTALL — Kompletní instalační průvodce FVE systému
 
-> Verze: 2026-07-11 | Od holého Armbianu po plně funkční HTTPS dashboard
+> Verze: 2026-08-12 | Od holého Armbianu po plně funkční HTTPS dashboard
 
 **Legenda značek:**
 - ⚠️ **PRE-AI** — Tento krok byl hotov před asistencí CodeWhale. Příkazy jsou
@@ -635,5 +635,5 @@ sudo systemctl restart fve-menic-reader fve-dashboard cloudflared-tunnel caddy
 
 ---
 
-*Poslední aktualizace: 11. 7. 2026*
+*Poslední aktualizace: 12. 8. 2026*
 

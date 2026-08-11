@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FV Statistiky — Grafy</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.2.0/dist/chartjs-plugin-zoom.min.js"></script>
+    <style>
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:'Segoe UI',Arial;background:#0f0f1a;color:#e0e0e0;padding:10px}
+        h1{color:#e94560;text-align:center;font-size:20px;margin-bottom:10px}
+        .periods{display:flex;justify-content:center;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+        .periods button{padding:6px 14px;border:1px solid #444;border-radius:5px;
+            background:#16213e;color:#ccc;font-size:14px;cursor:pointer}
+        .periods button.active{background:#e94560;color:#fff;border-color:#e94560}
+        .charts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+        @media(max-width:900px){.charts{grid-template-columns:1fr}}
+        .chart-box{background:#1a1a2e;border-radius:8px;padding:8px;border:1px solid #2a2a4a}
+        .chart-box h2{font-size:13px;color:#aaa;margin-bottom:4px}
+        .sum{color:#f0a500;font-weight:bold;font-size:13px}
+        canvas{width:100% !important;height:220px !important}
+        .export-bar{text-align:center;margin-top:12px}
+        .export-bar a{color:#888;font-size:12px;margin:0 8px}
+        .back{text-align:center;margin-top:5px}
+        .back a{color:#e94560;font-size:13px}
+    </style>
+</head>
+<body>
+    <h1>📊 Statistiky</h1>
+
+    <div class="periods">
+        <button data-period="today">Dnes</button>
+        <button data-period="24h" class="active">24 hodin</button>
+        <button data-period="30d">30 dní</button>
+        <button data-period="1y">Rok</button>
+        <button data-period="all">Vše</button>
+    </div>
+
+    <div class="charts">
+        <div class="chart-box"><h2>☀️ Výroba PV <span class="sum" id="sumPv"></span></h2><canvas id="chartPv"></canvas></div>
+        <div class="chart-box"><h2>🏠 Spotřeba domu <span class="sum" id="sumHouse"></span></h2><canvas id="chartHouse"></canvas></div>
+        <div class="chart-box"><h2>⚡ Vytěžování <span class="sum" id="sumVytizeni"></span></h2><canvas id="chartVytizeni"></canvas></div>
+        <div class="chart-box"><h2>🔋 Cykly baterie <span class="sum" id="sumBat"></span></h2><canvas id="chartBat"></canvas></div>
+    </div>
+
+    <div class="export-bar">
+        <a href="/statistiky/export?period=24h" id="exportLink">📥 Export CSV</a>
+    </div>
+    <div class="back"><a href="/statistiky">← Zpět na přehled</a> | <a href="/">🏠 Dashboard</a></div>
+
+<script>
+let charts = {};
+
+const colors = {
+    pv1: '#f0a500', pv2: '#e94560', house: '#4ecca3',
+    vytizeni: '#2980b9', bat: '#8e44ad'
+};
+
+function createChart(id, label, color, unit) {
+    const ctx = document.getElementById(id).getContext('2d');
+    return new Chart(ctx, {
+        type: 'bar',
+        data: {labels: [], datasets: [{
+            label: label, data: [], backgroundColor: color,
+            borderColor: color, borderWidth: 1, borderRadius: 2
+        }]},
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+                legend: {display: false},
+                zoom: {
+                    pan: {enabled: true, mode: 'x'},
+                    zoom: {wheel: {enabled: true}, pinch: {enabled: true}, mode: 'x'}
+                }
+            },
+            scales: {
+                x: {ticks: {color: '#888', maxTicksLimit: 12, font: {size: 10}}},
+                y: {ticks: {color: '#888', font: {size: 10}},
+                    title: {display: true, text: unit, color: '#666', font: {size: 10}}}
+            }
+        }
+    });
+}
+
+function makePvChart(id) {
+    const ctx = document.getElementById(id).getContext('2d');
+    return new Chart(ctx, {
+        type: 'bar',
+        data: {labels: [], datasets: [
+            {label: 'PV1', data: [], backgroundColor: colors.pv1, borderRadius: 2},
+            {label: 'PV2', data: [], backgroundColor: colors.pv2, borderRadius: 2}
+        ]},
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+                legend: {display: true, labels: {color: '#aaa', font: {size: 10}}},
+                zoom: {
+                    pan: {enabled: true, mode: 'x'},
+                    zoom: {wheel: {enabled: true}, pinch: {enabled: true}, mode: 'x'}
+                }
+            },
+            scales: {
+                x: {stacked: true, ticks: {color: '#888', maxTicksLimit: 12, font: {size: 10}}},
+                y: {stacked: true, ticks: {color: '#888', font: {size: 10}},
+                    title: {display: true, text: 'W', color: '#666', font: {size: 10}}}
+            }
+        }
+    });
+}
+
+function initCharts() {
+    if (charts.pv) charts.pv.destroy();
+    if (charts.house) charts.house.destroy();
+    if (charts.vytizeni) charts.vytizeni.destroy();
+    if (charts.bat) charts.bat.destroy();
+    charts.pv = makePvChart('chartPv');
+    charts.house = createChart('chartHouse', 'Dům', colors.house, 'W');
+    charts.vytizeni = createChart('chartVytizeni', 'Vytěžování', colors.vytizeni, 'W');
+    charts.bat = createChart('chartBat', 'Cykly', colors.bat, 'eq.cyklů');
+}
+
+function loadPeriod(period) {
+    document.querySelectorAll('.periods button').forEach(b => b.classList.remove('active'));
+    document.querySelector(`[data-period="${period}"]`).classList.add('active');
+    document.getElementById('exportLink').href = `/statistiky/export?period=${period}`;
+    initCharts();
+    fetch(`/statistiky/data?period=${period}`)
+        .then(r => r.json())
+        .then(d => {
+            charts.pv.data.labels = d.labels;
+            charts.pv.data.datasets[0].data = d.pv1;
+            charts.pv.data.datasets[1].data = d.pv2;
+            charts.pv.update();
+            charts.house.data.labels = d.labels;
+            charts.house.data.datasets[0].data = d.house;
+            charts.house.update();
+            charts.vytizeni.data.labels = d.labels;
+            charts.vytizeni.data.datasets[0].data = d.vytizeni;
+            charts.vytizeni.update();
+            charts.bat.data.labels = d.labels;
+            charts.bat.data.datasets[0].data = d.bat_cycles;
+            charts.bat.update();
+            // Sumární čísla
+            const sum = arr => arr.reduce((a,b)=>a+b,0);
+            const pvTotal = sum(d.pv1) + sum(d.pv2);
+            document.getElementById('sumPv').textContent = pvTotal >= 1000 ? (pvTotal/1000).toFixed(1) + ' kWh' : pvTotal + ' Wh';
+            document.getElementById('sumHouse').textContent = (sum(d.house)/1000).toFixed(1) + ' kWh';
+            document.getElementById('sumVytizeni').textContent = (sum(d.vytizeni)/1000).toFixed(1) + ' kWh';
+            document.getElementById('sumBat').textContent = sum(d.bat_cycles).toFixed(2) + ' cyklů';
+        });
+}
+
+document.querySelectorAll('.periods button').forEach(btn => {
+    btn.addEventListener('click', () => loadPeriod(btn.dataset.period));
+});
+
+initCharts();
+loadPeriod('24h');
+</script>
+</body>
+</html>

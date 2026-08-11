@@ -46,14 +46,12 @@ lego --version
 ## 2. Získat certifikát přes DNS-01
 
 ```bash
-# Token je uložen v /home/fiam/.desec_token (chmod 600)
-# Pokud ještě neexistuje, vytvoř ho:
-#   echo 'tvuj-token' | sudo tee /home/fiam/.desec_token
-#   sudo chmod 600 /home/fiam/.desec_token
+# Nastav token (vygeneruj na https://desec.io/domains → Token Management)
+export DESEC_TOKEN="tvuj-desec-token"
 
 # Spusť lego (běž jako uživatel fiam, ne root!)
 sudo -u fiam bash -c "
-  export DESEC_TOKEN=\$(cat /home/fiam/.desec_token)
+  export DESEC_TOKEN='tvuj-desec-token'
   /usr/local/bin/lego \
     --email tvuj@email.cz \
     --dns desec \
@@ -197,7 +195,7 @@ sudo crontab -e
 
 **Certifikát se nezíská:**
 ```bash
-sudo -u fiam bash -c 'export DESEC_TOKEN=$(cat /home/fiam/.desec_token); \
+sudo -u fiam DESEC_TOKEN="tvuj-desec-token" \
   /usr/local/bin/lego --email tvuj@email.cz --dns desec \
   --domains fiam-opi.dedyn.io --accept-tos --path /home/fiam/.lego run
 ```

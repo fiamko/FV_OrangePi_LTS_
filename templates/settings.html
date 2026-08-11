@@ -104,6 +104,14 @@
     </div>
 
     <div class="power-value">
+      <label>Zapni Virivka R2 (V):</label><input type="number" name="zapni_virivka2" value="{{ settings.zapni_virivka2 }}" min="24.00" max="28.00" step="0.01">
+    </div>
+
+    <div class="power-value">
+      <label>Vypni Virivka R2 (V):</label><input type="number" name="vypni_virivka2" value="{{ settings.vypni_virivka2 }}" min="24.00" max="28.00" step="0.01">
+    </div>
+
+    <div class="power-value">
       <label>Zapni Menic 2 (W):</label><input type="number" name="zapni_rele" value="{{ settings.zapni_rele }}" min="0" max="5000" step="0.1">
     </div>
 
@@ -116,7 +124,11 @@
     </div>
 
     <div class="power-value">
-      <label>Prikon virivka (W):</label><input type="number" name="power_virivka" value="{{ settings.power_virivka }}" min="0" max="5000" step="1">
+      <label>Prikon virivka R1 (W):</label><input type="number" name="power_virivka" value="{{ settings.power_virivka }}" min="0" max="5000" step="1">
+    </div>
+
+    <div class="power-value">
+      <label>Prikon virivka R2 (W):</label><input type="number" name="power_virivka2" value="{{ settings.power_virivka2 }}" min="0" max="5000" step="1">
     </div>
 
     <div class="power-value">

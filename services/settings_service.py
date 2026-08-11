@@ -1,12 +1,6 @@
 import json
 from pathlib import Path
 
-# ESP zařízení — ze secrets.py (neni v Gitu), jinak prazdny seznam
-try:
-    from secrets import ESP_DEVICES
-except ImportError:
-    ESP_DEVICES = []
-
 
 CONFIG_PATH = Path(__file__).resolve().parent.parent / "config.json"
 SEASON_NAMES = ("jaro", "leto", "podzim", "zima")
@@ -22,12 +16,15 @@ DEFAULT_FORM_SETTINGS = {
     "vypni_bojler": 26.80,
     "zapni_virivka": 27.10,
     "vypni_virivka": 26.90,
+    "zapni_virivka2": 27.20,
+    "vypni_virivka2": 27.00,
     "zapni_rele": 2500.0,
     "vypni_rele": 1800.0,
     "hystereze_s": 30.0,
     "rizeni_podle": "batteryVoltage",
     "power_bojler": 2000.0,
-    "power_virivka": 2000.0,
+    "power_virivka": 1150.0,
+    "power_virivka2": 1150.0,
     "power_podlaha300": 300.0,
     "power_podlaha2000": 2000.0,
     "power_podlaha2200": 2200.0,
@@ -40,7 +37,8 @@ PAIR_RULES = [
     ("zapni2", "vypni2", "Podlaha 2000W"),
     ("zapni3", "vypni3", "Podlaha 2200W"),
     ("zapni_bojler", "vypni_bojler", "Bojler"),
-    ("zapni_virivka", "vypni_virivka", "Virivka"),
+    ("zapni_virivka", "vypni_virivka", "Virivka R1"),
+    ("zapni_virivka2", "vypni_virivka2", "Virivka R2"),
     ("zapni_rele", "vypni_rele", "Menic 2"),
 ]
 
@@ -85,10 +83,6 @@ def _extract_profile_map(config_data):
 def get_form_settings(profile=None):
     """Vraci hodnoty pro formular nastaveni."""
     config_data = load_runtime_config()
-
-    # Sloučení ESP zařízení ze secrets (mají přednost před config.json)
-    if ESP_DEVICES:
-        config_data["esp_devices"] = ESP_DEVICES
 
     if profile:
         profiles = _extract_profile_map(config_data)

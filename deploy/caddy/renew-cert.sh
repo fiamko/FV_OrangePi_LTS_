@@ -5,29 +5,15 @@
 # =============================================================================
 set -euo pipefail
 
-TOKEN_FILE="/home/fiam/.desec_token"
-if [ ! -f "$TOKEN_FILE" ]; then
-    log "CHYBA: Token soubor $TOKEN_FILE neexistuje."
-    exit 1
-fi
-export DESEC_TOKEN=$(cat "$TOKEN_FILE")
+export DESEC_TOKEN="$(cat "$HOME/.desec_token")"
 
 LEGO_BIN="/usr/local/bin/lego"
 CERT_DIR="/home/fiam/.lego/certificates"
 CADDY_CERT="/etc/caddy/fve-bundle.crt"
 CADDY_KEY="/etc/caddy/fve-bundle.key"
 DOMAIN="fiam-opi.dedyn.io"
+EMAIL="$(cat "$HOME/.cert_email")"
 LOG_FILE="/var/log/fve-cert-renewal.log"
-
-# E-mail pro Let's Encrypt — ze souboru nebo promenne prostredi
-EMAIL_FILE="/home/fiam/.cert_email"
-if [ -f "$EMAIL_FILE" ]; then
-    EMAIL=$(cat "$EMAIL_FILE")
-elif [ -n "${CERT_EMAIL:-}" ]; then
-    EMAIL="$CERT_EMAIL"
-else
-    EMAIL=""
-fi
 
 log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" | tee -a "$LOG_FILE"

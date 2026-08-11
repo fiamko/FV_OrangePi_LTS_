@@ -5,24 +5,11 @@
 # =============================================================================
 set -euo pipefail
 
-TOKEN_FILE="/home/fiam/.desec_token"
-if [ ! -f "$TOKEN_FILE" ]; then
-    echo "CHYBA: Token soubor $TOKEN_FILE neexistuje." >&2
-    echo "Vytvor ho: echo 'tvuj-token' > $TOKEN_FILE && chmod 600 $TOKEN_FILE" >&2
-    exit 1
-fi
-export DESEC_TOKEN=$(cat "$TOKEN_FILE")
-
-# E-mail pro Let's Encrypt — ze souboru nebo promenne prostredi
-EMAIL_FILE="/home/fiam/.cert_email"
-if [ -f "$EMAIL_FILE" ]; then
-    CERT_EMAIL=$(cat "$EMAIL_FILE")
-elif [ -n "${CERT_EMAIL:-}" ]; then
-    true  # uz nastaveno pres promennou prostredi
-else
-    echo "CHYBA: E-mail nenastaven. Vytvor $EMAIL_FILE nebo nastav CERT_EMAIL." >&2
-    exit 1
-fi
+# DESEC_TOKEN a CERT_EMAIL se ctou z gitignorovanych souboru:
+#   ~/.desec_token  — desec.io API token (nikdy necommitovat!)
+#   ~/.cert_email   — e-mail pro Let's Encrypt
+export DESEC_TOKEN="$(cat "$HOME/.desec_token")"
+CERT_EMAIL="$(cat "$HOME/.cert_email")"
 
 /usr/local/bin/lego \
     --email "$CERT_EMAIL" \

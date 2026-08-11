@@ -2,27 +2,47 @@
     "priorityH": 26.68,
     "priorityL": 24.0,
     "mode": 0,
-    "zapni4": 26.75,
-    "vypni4": 26.5,
-    "zapni2": 26.9,
-    "vypni2": 26.75,
+    "zapni4": 26.3,
+    "vypni4": 26.2,
+    "zapni2": 26.99,
+    "vypni2": 26.4,
     "zapni3": 27.0,
-    "vypni3": 26.8,
-    "zapni_bojler": 27.1,
-    "vypni_bojler": 26.9,
-    "zapni_virivka": 27.0,
-    "vypni_virivka": 26.9,
-    "zapni_rele": 2500.0,
-    "vypni_rele": 1800.0,
+    "vypni3": 26.3,
+    "zapni_bojler": 27.2,
+    "vypni_bojler": 26.5,
+    "zapni_virivka": 26.9,
+    "vypni_virivka": 26.0,
+    "zapni_virivka2": 27.1,
+    "vypni_virivka2": 26.5,
+    "zapni_rele": 800.0,
+    "vypni_rele": 150.0,
     "hystereze_s": 20.0,
     "rizeni_podle": "batteryVoltage",
     "power_bojler": 2000.0,
-    "power_virivka": 2300.0,
+    "power_virivka": 1000.0,
+    "power_virivka2": 1000.0,
     "power_podlaha300": 300.0,
     "power_podlaha2000": 2000.0,
     "power_podlaha2200": 2200.0,
     "battery_capacity_ah": 300.0,
     "sample_interval_s": 10.0,
+    "esp_devices": [
+        {
+            "name": "Vířivka",
+            "ip": "192.168.0.106",
+            "subdomain": "virivka"
+        },
+        {
+            "name": "Podlahovka 2200W",
+            "ip": "192.168.0.151",
+            "subdomain": "podlahovka2200"
+        },
+        {
+            "name": "Podlahovky (budoucí)",
+            "ip": "192.168.0.???",
+            "subdomain": "podlahovky"
+        }
+    ],
     "season_profiles": {
         "jaro": {
             "zapni4": 26.75,
@@ -40,12 +60,15 @@
             "hystereze_s": 30.0,
             "rizeni_podle": "batteryVoltage",
             "power_bojler": 2000.0,
-            "power_virivka": 2000.0,
+            "power_virivka": 1150.0,
             "power_podlaha300": 300.0,
             "power_podlaha2000": 2000.0,
             "power_podlaha2200": 2200.0,
             "battery_capacity_ah": 300.0,
-            "sample_interval_s": 10.0
+            "sample_interval_s": 10.0,
+            "zapni_virivka2": 27.2,
+            "vypni_virivka2": 27.0,
+            "power_virivka2": 1150.0
         },
         "leto": {
             "zapni4": 26.75,
@@ -63,12 +86,15 @@
             "hystereze_s": 20.0,
             "rizeni_podle": "batteryVoltage",
             "power_bojler": 2000.0,
-            "power_virivka": 2300.0,
+            "power_virivka": 1150.0,
             "power_podlaha300": 300.0,
             "power_podlaha2000": 2000.0,
             "power_podlaha2200": 2200.0,
             "battery_capacity_ah": 300.0,
-            "sample_interval_s": 10.0
+            "sample_interval_s": 10.0,
+            "zapni_virivka2": 27.2,
+            "vypni_virivka2": 27.0,
+            "power_virivka2": 1150.0
         },
         "podzim": {
             "zapni4": 26.75,
@@ -86,12 +112,15 @@
             "hystereze_s": 30.0,
             "rizeni_podle": "batteryVoltage",
             "power_bojler": 2000.0,
-            "power_virivka": 2000.0,
+            "power_virivka": 1150.0,
             "power_podlaha300": 300.0,
             "power_podlaha2000": 2000.0,
             "power_podlaha2200": 2200.0,
             "battery_capacity_ah": 300.0,
-            "sample_interval_s": 10.0
+            "sample_interval_s": 10.0,
+            "zapni_virivka2": 27.2,
+            "vypni_virivka2": 27.0,
+            "power_virivka2": 1150.0
         },
         "zima": {
             "zapni4": 26.75,
@@ -109,12 +138,15 @@
             "hystereze_s": 30.0,
             "rizeni_podle": "batteryVoltage",
             "power_bojler": 2000.0,
-            "power_virivka": 2000.0,
+            "power_virivka": 1150.0,
             "power_podlaha300": 300.0,
             "power_podlaha2000": 2000.0,
             "power_podlaha2200": 2200.0,
             "battery_capacity_ah": 300.0,
-            "sample_interval_s": 10.0
+            "sample_interval_s": 10.0,
+            "zapni_virivka2": 27.2,
+            "vypni_virivka2": 27.0,
+            "power_virivka2": 1150.0
         }
     }
 }

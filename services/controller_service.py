@@ -48,13 +48,23 @@ DEVICE_RULES = [
     },
     {
         "name": "virivka",
-        "label": "Virivka",
+        "label": "Virivka R1",
         "on_key": "zapni_virivka",
         "off_key": "vypni_virivka",
         "metric": "selected",
-        "topic": "fve/spotrebice/virivka/set",
+        "topic": "fve/spotrebice/virivka/set",  # sdílený topic s virivka2
         "display_key": "virivka",
         "power_setting": "power_virivka",
+    },
+    {
+        "name": "virivka2",
+        "label": "Virivka R2",
+        "on_key": "zapni_virivka2",
+        "off_key": "vypni_virivka2",
+        "metric": "selected",
+        "topic": "fve/spotrebice/virivka/set",  # sdílený topic s virivka
+        "display_key": "virivka2",
+        "power_setting": "power_virivka2",
     },
     {
         "name": "menic2_rele",
@@ -106,6 +116,18 @@ class ControllerEngine:
         }
         client.publish(rule["topic"], json.dumps(payload), retain=True)
 
+    def _publish_virivka_combined(self, client, settings, source_name, source_value):
+        r1 = self.device_states.get("virivka", False)
+        r2 = self.device_states.get("virivka2", False)
+        payload = {
+            "relay1": 1 if r1 else 0,
+            "relay2": 1 if r2 else 0,
+            "source": source_name,
+            "source_value": round(source_value, 2),
+            "updated_at": int(time.time()),
+        }
+        client.publish("fve/spotrebice/virivka/set", json.dumps(payload), retain=True)
+
     def _publish_snapshot(self, client):
         payload = {
             name: {
@@ -144,10 +166,34 @@ class ControllerEngine:
         hysteresis_s = max(_safe_float(settings.get("hystereze_s"), 0.0), 0.0)
         now = time.time()
         changed = False
-        publish_queue = []
 
         with data_lock:
             for rule in DEVICE_RULES:
+                # Virivka pravidla — jen dashboard, MQTT publish se dělá kombinovaně na konci
+                if rule["name"] in ("virivka", "virivka2"):
+                    metric_name = selected_metric_name if rule["metric"] == "selected" else rule["metric"]
+                    source_value = metrics[metric_name]
+                    on_threshold = _safe_float(settings.get(rule["on_key"]), 0.0)
+                    off_threshold = _safe_float(settings.get(rule["off_key"]), 0.0)
+                    current_state = self.device_states[rule["name"]]
+                    next_state = current_state
+                    elapsed = now - self.last_change[rule["name"]]
+
+                    if current_state:
+                        if source_value <= off_threshold and elapsed >= hysteresis_s:
+                            next_state = False
+                    else:
+                        if source_value >= on_threshold and elapsed >= hysteresis_s:
+                            next_state = True
+
+                    self._set_dashboard_value(rule, next_state, settings)
+
+                    if next_state != current_state:
+                        self.device_states[rule["name"]] = next_state
+                        self.last_change[rule["name"]] = now
+                        changed = True
+                    continue
+
                 metric_name = selected_metric_name if rule["metric"] == "selected" else rule["metric"]
                 source_value = metrics[metric_name]
                 on_threshold = _safe_float(settings.get(rule["on_key"]), 0.0)
@@ -167,20 +213,19 @@ class ControllerEngine:
 
                 if next_state == current_state:
                     if not self.initial_state_sent:
-                        publish_queue.append((rule, next_state, metric_name, source_value, settings))
+                        self._publish_state(client, rule, next_state, metric_name, source_value, settings)
                     continue
 
                 self.device_states[rule["name"]] = next_state
                 self.last_change[rule["name"]] = now
-                publish_queue.append((rule, next_state, metric_name, source_value, settings))
+                self._publish_state(client, rule, next_state, metric_name, source_value, settings)
                 changed = True
+
+            # Virivka: publikovat obě relé v jedné zprávě
+            self._publish_virivka_combined(client, settings, selected_metric_name, selected_metric_value)
 
             current_data["controller_source"] = selected_metric_name
             current_data["controller_value"] = selected_metric_value
-
-        # MQTT publish OUTSIDE the lock, aby nezablokoval Flask endpointy
-        for args in publish_queue:
-            self._publish_state(client, *args)
 
         if changed or not self.initial_state_sent:
             self._publish_snapshot(client)

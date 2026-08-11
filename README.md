@@ -1,5 +1,6 @@
-[README.md](https://github.com/user-attachments/files/30478063/README.md)
 # FV_OrangePi_LTS_
+
+> Verze: 2026-08-12
 
 **FVE Dashboard pro OrangePi 3 LTS** — monitorování a řízení domácí fotovoltaické elektrárny přes webové rozhraní.
 
@@ -51,7 +52,7 @@ menic_web/
 │   └── statistics_service.py  # Agregace pro statistiky
 ├── routes/
 │   ├── dashboard.py           # / a /data
-│   ├── settings.py            # /nastaveni (heslo 2330)
+│   ├── settings.py            # /nastaveni (heslo ze secrets.py)
 │   └── statistics.py          # /statistiky
 ├── static/
 │   ├── dashboard.js           # Frontend logika (aktualizace po 2s)

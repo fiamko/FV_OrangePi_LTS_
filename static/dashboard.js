@@ -2,9 +2,10 @@
 
 var podlahovka2200_lastDuvod = "";
 var podlahovka2200_duvodUntil = 0;
+
 function updateDateTime() {
     const el = document.getElementById('datetime');
-    if (!el) return; // Pokud prvek neexistuje, funkce se tiše ukončí a neshodí zbytek JS
+    if (!el) return;
     const now = new Date();
     const options = {
         weekday: 'long',
@@ -20,7 +21,6 @@ function updateDateTime() {
 }
 
 
-
 // Formátování výkonu (W/kW)
 function formatPower(watts) {
     if (watts === 0) return '0 W';
@@ -32,7 +32,6 @@ function updateEnergyFlows(data) {
     updateFlow('flow-panelL-menicL', data.pvPower1, 'standard');
     updateFlow('flow-panelR-menicR', data.pvPower2, 'standard');
 
-    // Pomocná proměnná pro aktuální skupinu (budeme ji přepisovat)
     let group;
 
     // Toky mezi měniči a baterií
@@ -46,7 +45,6 @@ function updateEnergyFlows(data) {
 
         updateFlow('flow-menicL-battery', data.chrging, 'charging');
         updateFlow('flow-menicR-battery', data.chrging2, 'charging');
-        console.log("Nabijeni proudem:", data.chrging);
 
     } else if (data.dischrging > 0 || data.dischrging2 > 0) {
         // Vybíjení
@@ -56,14 +54,9 @@ function updateEnergyFlows(data) {
             group.querySelector('.flow-value').textContent = data.dischrging.toFixed(1) + " A";
         }
 
-        // Tady posíláme animaci na obě větve
         updateFlow('flow-menicL-battery', data.dischrging, 'discharging');
-        //updateFlow('flow-menicR-battery', data.dischrging, 'discharging');
-        console.log("Vybijeni proudem:", data.dischrging);
 
     } else {
-        // Klidový stav - nula
-        // Odstraníme 'active', aby čísla (otazníky) zmizela/zešedla
         let gL = document.getElementById('flow-menicL-battery');
         let gR = document.getElementById('flow-menicR-battery');
         if(gL) gL.classList.remove('active');
@@ -79,28 +72,25 @@ function updateEnergyFlows(data) {
     updateFlow('flow-menicL-bojler', data.boiler, 'standard');
     var podlaha2200Flow = data.heating1HasFeedback ? data.heating1Actual : data.heating1;
     updateFlow('flow-menicL-podlaha2200', podlaha2200Flow, 'standard');
-    updateFlow('flow-menicR-podlaha2000', data.heating2, 'standard');
-    updateFlow('flow-menicR-podlaha300', data.heating3, 'standard');
+    // Podlahovky: animace jen když relé skutečně sepnuto (ESP feedback)
+    updateFlow('flow-menicR-podlaha2000', data.podlaha2000_skutecny || 0, 'standard');
+    updateFlow('flow-menicR-podlaha300', data.podlaha300_skutecny || 0, 'standard');
 
     // Toky ze měniče 2 ke spotřebičům
-    var virivkaFlow = (data.virivkaStatus === 'ZAP') ? (data.virivkaActualW || data.virivka || 2300) : data.virivkaActualW;
+    // Vířivka: modrá animace JEN když je aspoň jedno relé ZAP
+    var virivkaFlow = (data.virivkaStatus === 'ZAP') ? (data.virivkaActualW || 2300) : 0;
     updateFlow('flow-menicR-virivka', virivkaFlow, 'standard');
 }
 // Aktualizace jednoho toku
 function updateFlow(flowId, power, type) {
     const flow = document.getElementById(flowId);
 
-    // PŘIDAT: Kontrola jestli element existuje
     if (!flow) {
-        console.error('Flow element not found:', flowId);
-        return; // Ukončit funkci
+        return;
     }
 
     const line = flow.querySelector('.flow-line');
     const value = flow.querySelector('.flow-value');
-
-    // Nastav výkon
-//    value.textContent = formatPower(power);
 
     if (power > 0) {
         // Aktivní tok
@@ -133,56 +123,88 @@ function updateUI(data) {
 
 const frame = document.getElementById('ina-frame');
 if (frame) {
-    // Nejdříve všechno smažeme, ať nevisí staré barvy
     frame.classList.remove('charging', 'discharging', 'alarm');
 
-    // BARVA: Vybíjení (Pokud používáte vaše data.dischrging, která jsou > 0)
     if (data.dischrging > 0) {
         frame.classList.add('discharging');
     }
-    // BARVA: Nabíjení (Pokud používáte data.chrging > 0)
     else if (data.chrging > 0) {
         frame.classList.add('charging');
     }
 
-    // ALARM: Napětí (Pokud napětí klesne pod 25V nebo stoupne nad 27.1V)
     if (data.inab_V < 25.0 || data.inab_V > 26.4) {
         frame.classList.add('alarm');
     }
 }
 
+// Bateriový indikátor — plnění šedého pásu odspodu
+(function(){
+    var v = data.batVoltage || 25;
+    var pct = Math.max(0, Math.min(100, (v - 25) / (27 - 25) * 100));
+    var c = pct < 30 ? '#e94560' : pct < 60 ? '#f0a500' : '#4ecca3';
+    var fill = document.getElementById('battery-fill');
+    if (fill) {
+        fill.style.height = pct + '%';
+        fill.style.background = c;
+    }
+})();
 
-    //const batteryFlow = data.batCurrent * data.batVoltage;
-    //document.getElementById('batteryFlow').textContent = formatPower(Math.abs(battery_Flow));
 
-    // Spotřebiče
+    // Spotřebiče — DŮM
     document.getElementById('dum').querySelector('.power-value').textContent = Math.round(data.load) + ' %';
+
+    // --- BOJLER ---
+    var boilerOPI = data.boiler > 0;
     document.getElementById('bojler').querySelector('.power-value').textContent = formatPower(data.boiler);
+    document.getElementById('bojler').querySelector('.power-value').style.color = boilerOPI ? '' : '#888';
+
+    // --- PODLAHA 2200W ---
     var p2200 = data.heating1HasFeedback ? (data.heating1Actual || 0) : data.heating1;
+    var p2200OPI = data.heating1 > 0;
     document.getElementById('podlaha2200').querySelector('.power-value').textContent = formatPower(p2200);
+    document.getElementById('podlaha2200').querySelector('.power-value').style.color = p2200OPI ? '' : '#888';
     var duvodEl = document.getElementById('podlaha2200Duvod');
     if (duvodEl) {
         var now = Date.now();
         var cur = data.podlahovka2200Duvod || '';
+        var opiChce = data.heating1 > 0;
+        var espTopi = data.heating1HasFeedback ? (data.heating1Actual > 0) : opiChce;
+        var ukazDuvod = opiChce && !espTopi && cur;
+
         if (cur && cur !== podlahovka2200_lastDuvod) {
             podlahovka2200_lastDuvod = cur;
             podlahovka2200_duvodUntil = now + 5000;
         }
-        if (now < podlahovka2200_duvodUntil) {
+        if (now < podlahovka2200_duvodUntil || ukazDuvod) {
             duvodEl.textContent = cur;
             duvodEl.className = 'podlahovka-duvod';
         } else {
-            var tv = data.podlahovka2200TempVstup || 0;
-            var to = data.podlahovka2200TempVystup || 0;
-            duvodEl.textContent = 'in' + tv.toFixed(1) + ' | out' + to.toFixed(1);
-            duvodEl.className = 'podlahovka-duvod podlahovka-teplota';
+            var tv = data.podlahovka2200TempVstup;
+            var to = data.podlahovka2200TempVystup;
+            // Když ESP offline nebo teploty nedorazily → prázdno
+            if (!data.podlahovka2200_online || (tv === undefined && to === undefined)) {
+                duvodEl.textContent = '\u2014';
+                duvodEl.className = 'podlahovka-duvod';
+            } else {
+                duvodEl.textContent = 'in' + (tv || 0).toFixed(1) + ' | out' + (to || 0).toFixed(1);
+                duvodEl.className = 'podlahovka-duvod podlahovka-teplota';
+            }
         }
     }
-    document.getElementById('podlaha2000').querySelector('.power-value').textContent = formatPower(data.heating2);
-    document.getElementById('podlaha300').querySelector('.power-value').textContent = formatPower(data.heating3);
-    // Vířivka — VŽDY skutečný odběr (proud0 × 220V), nikdy nominál!
+
+    // --- PODLAHA 2000W ---
+    var p2000OPI = data.podlaha2000_prikaz > 0;
+    document.getElementById('podlaha2000').querySelector('.power-value').textContent = formatPower(data.podlaha2000_prikaz);
+    document.getElementById('podlaha2000').querySelector('.power-value').style.color = p2000OPI ? '' : '#888';
+
+    // --- PODLAHA 300W ---
+    var p300OPI = data.podlaha300_prikaz > 0;
+    document.getElementById('podlaha300').querySelector('.power-value').textContent = formatPower(data.podlaha300_prikaz);
+    document.getElementById('podlaha300').querySelector('.power-value').style.color = p300OPI ? '' : '#888';
+
+    // --- VÍŘIVKA ---
     const virivkaActual = data.virivkaActualW || 0;
-    const virivkaOPIon = (data.virivkaOPI || 0) > 0;
+    const virivkaOPIon = (data.virivkaOPI || 0) > 0 || (data.virivka2OPI || 0) > 0;
     document.getElementById('virivka').querySelector('.power-value').textContent = formatPower(virivkaActual);
     document.getElementById('virivka').querySelector('.power-value').style.color = virivkaOPIon ? '' : '#888';
     const tempEl = document.getElementById('virivkaTemp');
@@ -193,7 +215,7 @@ if (frame) {
 
     const menic2Icon = document.querySelector('.menic-right .icon');
     if (menic2Icon) {
-        menic2Icon.classList.toggle('icon-alert', Number(data.menic2Enabled) > 0);
+        menic2Icon.classList.toggle('inactive', !data.menic2_online);
     }
 
     // Aktualizace toků energie
@@ -239,16 +261,3 @@ updateDateTime();
 setInterval(updateDateTime, 1000);
 setInterval(updateData, 2000);
 updateData();
-
-//----------------------------------------------
-/*function updateData() {
-    fetch('/data')
-        .then(response => response.json())
-        .then(data => {
-            //console.log("DATA DORAZILA:", data); // <--- A tohle
-            updateUI(data);
-        });
-}  */
-//----------------------------------------------
-// Režim simulace (nastav na false pro reálná data)
-//window.SIMULATE = false;

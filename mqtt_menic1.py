@@ -5,15 +5,10 @@ import paho.mqtt.client as mqtt
 import json
 from datetime import datetime
 
-# MQTT broker — ze secrets.py (neni v Gitu)
-try:
-    from secrets import MQTT_BROKER, MQTT_PORT
-except ImportError:
-    MQTT_BROKER = 'localhost'  # fallback: běží na stejném OPI
-    MQTT_PORT = 1883
-
 # Konfigurace
 PORT = '/dev/ttyUSB0'
+MQTT_BROKER = 'localhost'  # protože běží na stejném OPI
+MQTT_PORT = 1883
 MQTT_TOPIC = 'menic/1/data'  # všechna data pošleme do jednoho topicu jako JSON
 
 # Mapování hodnot pro PI30 (prvních 17)
@@ -40,55 +35,73 @@ NAZVY = [
 # Filtr: omezí extrémní skoky na max ±20 % předchozí hodnoty
 # Klíče, které se filtrují (ostatní procházejí beze změny)
 FILTER_KEYS = [
-    "grid_voltage", "grid_frequency",
-    "output_voltage", "output_frequency",
     "output_apparent_power", "output_active_power",
-    "bus_voltage", "battery_voltage",
+    "battery_voltage",
     "battery_charging_current", "battery_discharge_current",
-    "pv_current", "pv_voltage", "battery_voltage_scc",
+    "pv_voltage", "battery_voltage_scc",
     "pv_power", "output_load_percent",
 ]
 _prev = {}  # předchozí hodnoty pro filtr
 
 # Absolutní limity — cokoliv nad se zahodí (vrátí se předchozí hodnota)
 MAX_LIMITS = {
-    "grid_voltage": 300, "grid_frequency": 60,
-    "output_voltage": 300, "output_frequency": 60,
-    "output_apparent_power": 10000, "output_active_power": 10000,
-    "bus_voltage": 500, "battery_voltage": 65,
+    "output_apparent_power": 4000, "output_active_power": 4000,
+    "battery_voltage": 65,
     "battery_charging_current": 120, "battery_discharge_current": 120,
-    "pv_current": 100, "pv_voltage": 500, "battery_voltage_scc": 65,
-    "pv_power": 10000, "output_load_percent": 150,
+    "pv_voltage": 500, "battery_voltage_scc": 65,
+    "pv_power": 4000, "output_load_percent": 150,
 }
 
-# Přísnější omezení skoků pro napětí (max ±10 % místo ±20 %)
-TIGHT_KEYS = {"grid_voltage", "output_voltage", "bus_voltage",
-              "battery_voltage", "battery_voltage_scc", "pv_voltage"}
+# Omezení skoků pro napětí (±20 %)
+TIGHT_KEYS = {"battery_voltage", "battery_voltage_scc", "pv_voltage"}
+
+# Klíče bez omezení skoků — jen absolutní limit a subnormální filtr.
+# Výkon a zátěž můžou skákat libovolně.
+NO_RATIO_LIMIT = {"output_apparent_power", "output_active_power",
+                  "output_load_percent", "pv_power"}
 
 def filtruj(key, nova):
-    """Absolutní limit + omezení skoků (10 % pro napětí, 20 % pro zbytek)."""
+    """Absolutní limit + omezení skoků (20 % pro napětí, zbytek bez omezení)."""
     if key not in _prev:
         _prev[key] = nova
         return nova
+    # Battery currents: speciální ošetření — práh šumu 0,1 A, limit 120 A
+    if key in ("battery_charging_current", "battery_discharge_current"):
+        # Šum pod 0,1 A → vynulovat
+        if isinstance(nova, (int, float)) and abs(nova) < 0.1:
+            _prev[key] = 0.0
+            return 0.0
+        # Absurdní hodnota (>120 A) → zachovat předchozí
+        if abs(nova) > 120:
+            return _prev[key]
+        # Normální hodnota — uložit a vrátit
+        _prev[key] = nova
+        return nova
+
+    # Subnormální nesmysl (1e-323 apod.) → vynulovat
+    if isinstance(nova, float) and abs(nova) < 1e-10:
+        return 0.0
 
     # Absolutní nesmysl → vrať předchozí hodnotu
     limit = MAX_LIMITS.get(key)
     if limit is not None and abs(nova) > limit:
         return _prev[key]
 
+    # Výkonové a frekvenční klíče: žádné omezení skoků
+    if key in NO_RATIO_LIMIT:
+        _prev[key] = nova
+        return nova
+
     stare = _prev[key]
     if stare == 0:
         _prev[key] = nova
         return nova
 
-    tight = key in TIGHT_KEYS
-    pomer = nova / stare if stare != 0 else 1.0
-    if tight:
-        if pomer > 1.10:       nova = stare * 1.10
-        elif pomer < 0.90:     nova = stare * 0.90
-    else:
-        if pomer > 2.0:        nova = stare * 1.2
-        elif pomer < 0.5:      nova = stare * 0.8
+    # Napětí: omezit skok na ±20 %
+    if key in TIGHT_KEYS:
+        pomer = nova / stare if stare != 0 else 1.0
+        if pomer > 1.20:       nova = stare * 1.20
+        elif pomer < 0.80:     nova = stare * 0.80
     _prev[key] = nova
     return nova
 
@@ -139,11 +152,16 @@ def main():
                 # Převod na číslo pokud možno
                 try:
                     if '.' in values[i]:
-                        data[nazev] = float(values[i])
+                        val = float(values[i])
+                        # Bateriové proudy: vždy vložit (i 0.0), filtr se postará o šum
+                        if nazev in ("battery_charging_current", "battery_discharge_current"):
+                            data[nazev] = val
+                        elif abs(val) >= 1e-10:  # ignoruj subnormalni nesmysly
+                            data[nazev] = val
                     else:
                         data[nazev] = int(values[i])
                 except:
-                    data[nazev] = values[i]
+                    pass  # poskozena data preskocime
 
             # Specifické hodnoty
             if len(values) > 17:
@@ -167,6 +185,11 @@ def main():
             for key in FILTER_KEYS:
                 if key in data and isinstance(data[key], (int, float)):
                     data[key] = filtruj(key, data[key])
+
+            # Zaokrouhli vsechny floaty na 2 desetinna mista
+            for k, v in list(data.items()):
+                if isinstance(v, float):
+                    data[k] = round(v, 2)
 
             # Odeslání do MQTT
             try:

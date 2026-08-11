@@ -12,13 +12,12 @@ from routes.statistics import statistics_bp
 from services.mqtt_service import mqtt_worker
 
 
-# Heslo pro ulozeni nastaveni — nacteno ze secrets.py (neni v Gitu)
+# Heslo pro ulozeni nastaveni — ze souboru secrets.py (NIKDY necommitovat!).
+# Po naklonovani repozitare:  cp secrets.example.py secrets.py  a vypln skutecne heslo.
 try:
     from secrets import SETTINGS_PASSWORD
 except ImportError:
-    SETTINGS_PASSWORD = "CHANGE_ME"
-    print("VAROVANI: secrets.py nenalezen! Pouzivam vychozi heslo 'CHANGE_ME'.")
-    print("Zkopiruj secrets.example.py do secrets.py a nastav vlastni heslo.")
+    SETTINGS_PASSWORD = "zmen-toto-heslo"
 
 app = Flask(__name__)
 app.config["SETTINGS_PASSWORD"] = SETTINGS_PASSWORD
@@ -33,47 +32,20 @@ STATIC_DIR = "static"
 def add_header(response):
     response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
     response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
     return response
 
 
 @app.route("/manifest.json")
-def serve_manifest():
-    """Dynamický manifest — jiná ikona/název pro LAN vs. internet."""
+def manifest():
     host = request.host.lower()
-    is_tunnel = "fv-peter" in host
-
-    return jsonify({
-        "name": "ExtWeb - Elektrárna" if is_tunnel else "IntWeb - Elektrárna",
-        "short_name": "ExtWeb" if is_tunnel else "IntWeb",
-        "description": "Dashboard FV elektrarny (internet)" if is_tunnel
-                       else "Dashboard FV elektrarny (LAN)",
-        "start_url": "/",
-        "display": "standalone",
-        "orientation": "any",
-        "background_color": "#000000",
-        "theme_color": "#003366" if is_tunnel else "#228B22",
-        "icons": [
-            {"src": "/static/icons/icon-web-192.png",
-             "sizes": "192x192", "type": "image/png",
-             "purpose": "any maskable"}
-            if is_tunnel else
-            {"src": "/static/icons/icon-lan-192.png",
-             "sizes": "192x192", "type": "image/png",
-             "purpose": "any maskable"},
-            {"src": "/static/icons/icon-web-512.png",
-             "sizes": "512x512", "type": "image/png",
-             "purpose": "any maskable"}
-            if is_tunnel else
-            {"src": "/static/icons/icon-lan-512.png",
-             "sizes": "512x512", "type": "image/png",
-             "purpose": "any maskable"},
-        ]
-    })
+    if "fv-peter" in host:
+        return send_from_directory(STATIC_DIR, "manifest-web.json")
+    return send_from_directory(STATIC_DIR, "manifest.json")
 
 
 @app.route("/favicon.ico")
-def serve_favicon():
-    """Dynamický favicon — jiné ICO pro LAN vs. internet."""
+def favicon():
     host = request.host.lower()
     ico = "favicon-web.ico" if "fv-peter" in host else "favicon-lan.ico"
     return redirect(f"/static/icons/{ico}")
@@ -81,7 +53,6 @@ def serve_favicon():
 
 @app.route("/static/<path:filename>")
 def serve_static(filename):
-    """Obsluha statickych souboru (CSS, JS, ikony)."""
     return send_from_directory(STATIC_DIR, filename)
 
 

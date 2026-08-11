@@ -20,6 +20,7 @@ def on_connect(client, userdata, flags, rc, properties=None):
 
     client.subscribe("menic/1/data")
     client.subscribe("menic/1/data/#")
+    client.subscribe("menic/2/data")
     client.subscribe("baterie/data")
     client.subscribe("baterie/data/#")
     client.subscribe("fve/spotrebice/virivka/stav")
@@ -28,6 +29,10 @@ def on_connect(client, userdata, flags, rc, properties=None):
     client.subscribe("fve/spotrebice/podlaha2200/teplota")
     client.subscribe("fve/spotrebice/virivka/status")
     client.subscribe("fve/spotrebice/podlahovky/status")
+    client.subscribe("fve/spotrebice/podlaha300/status")
+    client.subscribe("fve/spotrebice/podlaha2000/status")
+    client.subscribe("fve/spotrebice/podlaha300/stav")
+    client.subscribe("fve/spotrebice/podlaha2000/stav")
 
 def on_disconnect(client, userdata, rc, properties=None):
     if rc != 0:
@@ -75,6 +80,9 @@ def on_message(client, userdata, msg):
                     if not online:
                         current_data["heating1_actual"] = 0.0
                         current_data["heating1_state_actual"] = 0
+                        # Vymazat teploty — bez ESP nemá co zobrazovat
+                        current_data.pop("podlahovka2200_teplota_vstup", None)
+                        current_data.pop("podlahovka2200_teplota_vystup", None)
             return
 
         if msg.topic == "fve/spotrebice/virivka/status":
@@ -83,9 +91,15 @@ def on_message(client, userdata, msg):
                 online = payload.get("status") == "online"
                 with data_lock:
                     current_data["virivka_online"] = online
+                    if not online:
+                        current_data.pop("virivka_actual_w", None)
+                        current_data.pop("virivka_current", None)
             return
 
-        if msg.topic == "fve/spotrebice/podlahovky/status":
+        # Podlahovky online — jakýkoli z těchto topiců nastaví online
+        if msg.topic in ("fve/spotrebice/podlahovky/status",
+                         "fve/spotrebice/podlaha300/status",
+                         "fve/spotrebice/podlaha2000/status"):
             payload = json.loads(msg.payload.decode())
             if isinstance(payload, dict):
                 online = payload.get("status") == "online"
@@ -101,6 +115,35 @@ def on_message(client, userdata, msg):
                     current_data["podlahovka2200_teplota_vstup"] = round(float(payload.get("vstup", 0) or 0), 1)
                     current_data["podlahovka2200_teplota_vystup"] = round(float(payload.get("vystup", 0) or 0), 1)
             return
+
+        # === Stav podlahovky 300W (nové ESP podlahovky) ===
+        if msg.topic == "fve/spotrebice/podlaha300/stav":
+            payload = json.loads(msg.payload.decode())
+            if isinstance(payload, dict):
+                vystup = int(payload.get("vystup", 0) or 0)
+                with data_lock:
+                    current_data["podlaha300_skutecny"] = 300.0 if vystup == 1 else 0.0
+                    current_data["podlaha300_vystup"] = vystup
+                    current_data["podlaha300_duvod"] = payload.get("duvod", "")
+            return
+
+        # === Stav podlahovky 2000W (nové ESP podlahovky) ===
+        if msg.topic == "fve/spotrebice/podlaha2000/stav":
+            payload = json.loads(msg.payload.decode())
+            if isinstance(payload, dict):
+                vystup = int(payload.get("vystup", 0) or 0)
+                with data_lock:
+                    current_data["podlaha2000_skutecny"] = 2000.0 if vystup == 1 else 0.0
+                    current_data["podlaha2000_vystup"] = vystup
+                    current_data["podlaha2000_duvod"] = payload.get("duvod", "")
+            return
+
+        # === Data z měniče 2 — jen detekce online ===
+        if msg.topic == "menic/2/data":
+            with data_lock:
+                current_data["menic2_online"] = True
+            # Propustit do obecného handleru pro uložení hodnot
+            # (ne return — ať se data uloží do current_data)
 
         raw_payload = msg.payload.decode()
         payload = json.loads(raw_payload)

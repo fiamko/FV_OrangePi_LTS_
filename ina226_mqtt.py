@@ -40,16 +40,8 @@ class INA226:
 
         self.mqtt = mqtt_client
         if self.mqtt is None:
-            # MQTT broker — ze secrets.py (neni v Gitu)
-            try:
-                from secrets import MQTT_BROKER, MQTT_PORT
-                broker = MQTT_BROKER
-                port = MQTT_PORT
-            except ImportError:
-                broker = "localhost"
-                port = 1883
             self.mqtt = mqtt.Client()
-            self.mqtt.connect(broker, port, 60)
+            self.mqtt.connect("localhost", 1883, 60)
 
     def write_reg(self, reg, val):
         self.bus.write_i2c_block_data(self.addr, reg,
