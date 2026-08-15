@@ -1,0 +1,7 @@
+# Toto je SABLONA. Skutecny e-mail NIKDY necommituj do gitu!
+#
+# Postup na OPI:
+#   1. Zkopiruj tento soubor: cp .cert_email.example /home/fiam/.cert_email
+#   2. Nahrad "tvuj@email.cz" skutecnym e-mailem (Let's Encrypt notifikace)
+#   3. Nastav prava: chmod 600 /home/fiam/.cert_email
+tvuj@email.cz
