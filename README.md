@@ -5,18 +5,24 @@
 **FVE Dashboard pro OrangePi 3 LTS** — monitorování a řízení domácí fotovoltaické elektrárny přes webové rozhraní.
 
 ---
-## Motivace k vývoji vlastního systému monitoringu FV elektrárny
-Vlastní ostrovní elektrárna s využitím veřejné elektrické sítě jako záložního zdroje s automatickým třífázovým přepínačem sítí a blokádou v přepnutí na tuto síť. 
-Zakoupená licence na SolarAsisstant nevyhovovala funkcemi, omezením na jeden měnič a uzavřením systému bez možnosti úprav dle potřeby. Rozhodnutí vytvořit systém vlastní bez podobných omezení, hlavně s možností načítat data z více měničů, nebo řídit vytěžování i do zakoupené vířivky s vlastní regulací a neznámým kódem pro dálkové vyp/zap topení. Ostatní spotřebiče jsou běžné odporové spirály jednak jako topné tělesa v kotli pro vodní podlahové topení, ohřev teplé vody, nebo jako elektrické podlahové topení s vlastní regulaci.
-Vířivka a její úpravy: Po odkrytování pohonné jednotky běžné nafukovací vířivky ze supermarketu jsem zjistil dvě samostatné topné spirály, každá příkon 1kW, tedy stupňovité řízení výkonu topení. Tohle je výborně využitelné na vytěžování zbytkového výkonu mojí FV. Jeden vývod každé spirály jsem přerušil NC kontakty dvou relé v modulu ESP32 z Aliexpressu. Pokud mě budete kopírovat v této úpravě vířivky, konáte tak na vlastní nebezpečí!
-Ráno, ve dni kdy chci mít ohřátou vířivku tuto normálně zapojím a nastavím ohřev, čím se zapne oběhové čerpadlo, ale spirály se po cca 1 minutě odpojí a čeká se příkaz z nadřazeného OPI LTS pro zapnutí ohřevu. 
-Vytěžování řídím primitivně podle napětí baterie a toto je nastavitelné v setup OPI LTS - náhled živého a fungujícího systému je na adrese mého webu, kde je vidět nastavení OPI i jednotlivých ESP. Možnost měnit nastavení je bezpečně zaheslovaná.
-OPI vyhodnotí podle napětí baterie nastavený práh zapnutí, všechny ESP mají hysterezi časovou pro zamezení blikání jako u analogového řízení dosud používaného, uloží do MQTT povel na zapnutí jednotlivých spotřebičů a takto řídí v reálném čase vytěžování tak, aby byla energie z panelů maximálně využita pro užitečné uložení a využití. 
-Tím jsem eliminoval blikání jednoduchého analogového spínání napěťovým prahem, zvýšil přesnost nastavení na stotiny voltu a zajistil tak vždy dostatek energie v baterii pro noční provoz elektrárny.
-Jednotlivé ESP32, uložené v samostatných repo jsou jedno i dvou reléové moduly běžně k zakoupení na Aliexpres, Amazon či jiných, podobných tržištích a přibude i možnost změny firmwaru v Sonoff - u mně na spínání oběhového čerpadla ve vodním okruhu podlahového topení.
-Systém je pořád ve vývoji, přibývají další funkce a možnosti rozšíření. Vše neustále sleduji a nastavuji, ale z větší bezpečností jako u původního analogového systému, navíc mám kdekoli a kdykoli kontrolu co se v domácnosti děje, samotná domácnost (myčka, pračka, pečící trouby a pod) mají absolutní přednost a bezpečnostní funkce v samotných ESP urychlují reakci na zvýšený odběr domácnosti odpojením vytěžování bez čekání na povel od OPI.
-Na webu FV-peter.cz jsou některé komponenty šedé a tedy nepřipojené do systému či už pro jejich vypnutí, poruchu nebo servis. U měniče číslo 2 mám poruchu na sériovém portu a INA není dokončená pro citlivost na rušení ve strojovně. Bojler není připojen (zatím) vůbec. 
-Signalizace jednotlivých funkcí na webu: Šedá ikona je komponenta nepřipojena k MQTT, černá signalizuje připojení a funkci. Výkon (číslice) pod ikonou je šedý, pokud je příkaz z OPI off, zčerná po příkazu ON. animované čáry ke komponentům jsou šedé pokud ESP hlásí svůj stav jako OFF, když se relé zapne, čára zmodrá a animuje tok energie k spotřebiči. U kotle podlahovky se zobrazuje nad ikonou teplota vstupní a výstupní do/z kotle, která se občas změní podle hlášení stavů z ESP, ale po 10 sec se vrátí na teplotu. Vířivka podobně signalizuje teplotu a pod ikonou i reálný odběr výkonu z FV. Ostatní je jasné a není potřeba vysvětlovat.
+
+## Motivace
+
+Koupená licence na SolarAssistant mi nevyhovovala — jen jeden měnič, uzavřený systém, bez možnosti úprav. Proto jsem si postavil vlastní monitorovací a řídicí systém, který načítá více měničů a řídí vytěžování přebytků podle sebe.
+
+### Jak to funguje
+- Vytěžování řídím podle **napětí baterie** — meze se nastavují ve webu OPI s přesností na setiny voltu.
+- OPI vyhodnotí práh a přes MQTT posílá povely ESP výkonovým členům (bojler, podlahovky, vířivka).
+- ESP mají **časovou hysterezi** (žádné blikání jako u analogového spínání) a **vlastní bezpečnostní funkce** — při zvýšeném odběru domácnosti odpojí vytěžování okamžitě, bez čekání na OPI.
+- Domácnost (myčka, pračka, trouba…) má vždy přednost.
+
+### Vířivka
+Nafukovací vířivku ze supermarketu jsem upravil: má dvě spirály po 1 kW, takže výkon topení jde stupňovitě řídit. Každou spirálu jsem přerušil NC kontaktem relé v modulu ESP32. ⚠️ **Tuto úpravu kopírujete na vlastní nebezpečí.**
+
+### Web
+Na fv-peter.cz je vidět celý systém. Šedá ikona = komponenta nepřipojená, černá = připojená a funkční. Číslice pod ikonou šedne při příkazu OFF, zčerná při ON. Animovaná čára zmodrá a teče k spotřebiči, když relé sepne. U podlahovky se zobrazuje teplota vstup/výstup kotle, u vířivky teplota a reálný odběr.
+
+Systém je stále ve vývoji — přibývají funkce (mj. firmware pro Sonoff na oběhové čerpadlo).
 
 ## Co to je
 
@@ -157,7 +163,7 @@ Dashboard běží na `http://192.168.0.191:5000`.
 
 ### Přístup
 - **Dashboard:** `http://192.168.0.191:5000`
-- **Nastavení:** `http://192.168.0.191:5000/nastaveni` (heslo: **změňte v app01.py!**)
+- **Nastavení:** `http://192.168.0.191:5000/nastaveni` (heslo: viz `secrets.py`)
 - **Statistiky:** `http://192.168.0.191:5000/statistiky`
 
 ---
@@ -189,7 +195,7 @@ Každý ESP32:
 ## Zabezpečení
 
 - MQTT broker pouze na LAN (`iptables` omezení na `192.168.0.0/24`)
-- Heslo pro nastavení v `app01.py` (`SETTINGS_PASSWORD`) — **před nasazením změnit!**
+- Heslo pro nastavení v `secrets.py` (`SETTINGS_PASSWORD`) — **před nasazením změnit!**
 - Externí přístup přes Caddy + Cloudflare Tunnel (volitelné)
 
 ---

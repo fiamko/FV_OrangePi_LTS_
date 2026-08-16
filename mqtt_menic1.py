@@ -35,30 +35,36 @@ NAZVY = [
 # Filtr: omezí extrémní skoky na max ±20 % předchozí hodnoty
 # Klíče, které se filtrují (ostatní procházejí beze změny)
 FILTER_KEYS = [
+    "grid_voltage", "grid_frequency",
+    "output_voltage", "output_frequency",
     "output_apparent_power", "output_active_power",
-    "battery_voltage",
+    "bus_voltage", "battery_voltage",
     "battery_charging_current", "battery_discharge_current",
-    "pv_voltage", "battery_voltage_scc",
+    "pv_current", "pv_voltage", "battery_voltage_scc",
     "pv_power", "output_load_percent",
 ]
 _prev = {}  # předchozí hodnoty pro filtr
 
 # Absolutní limity — cokoliv nad se zahodí (vrátí se předchozí hodnota)
 MAX_LIMITS = {
+    "grid_voltage": 300, "grid_frequency": 60,
+    "output_voltage": 300, "output_frequency": 60,
     "output_apparent_power": 4000, "output_active_power": 4000,
-    "battery_voltage": 65,
+    "bus_voltage": 550, "battery_voltage": 30,
     "battery_charging_current": 120, "battery_discharge_current": 120,
-    "pv_voltage": 500, "battery_voltage_scc": 65,
-    "pv_power": 4000, "output_load_percent": 150,
+    "pv_current": 100, "pv_voltage": 550, "battery_voltage_scc": 33,
+    "pv_power": 4200, "output_load_percent": 130,
 }
 
 # Omezení skoků pro napětí (±20 %)
-TIGHT_KEYS = {"battery_voltage", "battery_voltage_scc", "pv_voltage"}
+TIGHT_KEYS = {"grid_voltage", "output_voltage", "bus_voltage",
+              "battery_voltage", "battery_voltage_scc", "pv_voltage"}
 
 # Klíče bez omezení skoků — jen absolutní limit a subnormální filtr.
-# Výkon a zátěž můžou skákat libovolně.
+# Výkon, zátěž, frekvence a proud panelů můžou skákat libovolně.
 NO_RATIO_LIMIT = {"output_apparent_power", "output_active_power",
-                  "output_load_percent", "pv_power"}
+                  "output_load_percent", "pv_power",
+                  "grid_frequency", "output_frequency", "pv_current"}
 
 def filtruj(key, nova):
     """Absolutní limit + omezení skoků (20 % pro napětí, zbytek bez omezení)."""
@@ -78,9 +84,9 @@ def filtruj(key, nova):
         _prev[key] = nova
         return nova
 
-    # Subnormální nesmysl (1e-323 apod.) → vynulovat
+    # Subnormální nesmysl (1e-323 apod.) → vrať předchozí
     if isinstance(nova, float) and abs(nova) < 1e-10:
-        return 0.0
+        return _prev[key]
 
     # Absolutní nesmysl → vrať předchozí hodnotu
     limit = MAX_LIMITS.get(key)
