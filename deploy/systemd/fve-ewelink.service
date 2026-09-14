@@ -1,0 +1,14 @@
+[Unit]
+Description=FVE eWeLink bridge (Sonoff cerpadlo)
+After=network-online.target mosquitto.service
+Wants=network-online.target mosquitto.service
+
+[Service]
+User=fiam
+WorkingDirectory=/home/fiam/menic_web
+ExecStart=/home/fiam/menic_web/fve-env/bin/python -u /home/fiam/menic_web/ewelink_mqtt.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

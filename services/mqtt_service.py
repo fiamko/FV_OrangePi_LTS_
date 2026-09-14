@@ -33,6 +33,8 @@ def on_connect(client, userdata, flags, rc, properties=None):
     client.subscribe("fve/spotrebice/podlaha2000/status")
     client.subscribe("fve/spotrebice/podlaha300/stav")
     client.subscribe("fve/spotrebice/podlaha2000/stav")
+    client.subscribe("fve/spotrebice/cerpadlo/stav")
+    client.subscribe("fve/spotrebice/cerpadlo/status")
 
 def on_disconnect(client, userdata, rc, properties=None):
     if rc != 0:
@@ -136,6 +138,28 @@ def on_message(client, userdata, msg):
                     current_data["podlaha2000_skutecny"] = 2000.0 if vystup == 1 else 0.0
                     current_data["podlaha2000_vystup"] = vystup
                     current_data["podlaha2000_duvod"] = payload.get("duvod", "")
+            return
+
+        # === Stav čerpadla (eWeLink bridge) ===
+        if msg.topic == "fve/spotrebice/cerpadlo/stav":
+            payload = json.loads(msg.payload.decode())
+            if isinstance(payload, dict):
+                vystup = int(payload.get("vystup", 0) or 0)
+                with data_lock:
+                    current_data["cerpadlo_vystup"] = vystup
+                    current_data["cerpadlo_duvod"] = payload.get("duvod", "")
+                    current_data["cerpadlo_status"] = payload.get("status", "OFF")
+            return
+
+        # === Status čerpadla (eWeLink bridge, LWT) ===
+        if msg.topic == "fve/spotrebice/cerpadlo/status":
+            payload = json.loads(msg.payload.decode())
+            if isinstance(payload, dict):
+                online = payload.get("status") == "online"
+                with data_lock:
+                    current_data["cerpadlo_online"] = online
+                    if not online:
+                        current_data["cerpadlo_vystup"] = 0
             return
 
         # === Data z měniče 2 — jen detekce online ===

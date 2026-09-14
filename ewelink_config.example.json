@@ -1,0 +1,12 @@
+{
+  "deviceid": "1000xxxxxx",
+  "devicekey": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+  "host": "192.168.0.132",
+  "port": 8081,
+  "mqtt_broker": "localhost",
+  "mqtt_port": 1883,
+  "cmd_topic": "fve/spotrebice/cerpadlo/set",
+  "state_topic": "fve/spotrebice/cerpadlo/stav",
+  "status_topic": "fve/spotrebice/cerpadlo/status",
+  "poll_interval_s": 10
+}

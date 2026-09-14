@@ -90,6 +90,13 @@ class ControllerEngine:
         self.device_states = {rule["name"]: False for rule in DEVICE_RULES}
         self.last_change = {rule["name"]: 0.0 for rule in DEVICE_RULES}
         self.initial_state_sent = False
+        # Čerpadlo (eWeLink) — vlastní logika mimo DEVICE_RULES
+        self.device_states["cerpadlo"] = False
+        self.last_change["cerpadlo"] = 0.0
+        self.cerpadlo_ohrev_accum = 0.0
+        self.cerpadlo_last_tick = time.time()
+        self.cerpadlo_last_day = None
+        self.cerpadlo_on_since = None
 
     def _get_metrics(self, snapshot, selected_metric):
         metric_key = selected_metric if selected_metric in {"batteryVoltage", "batteryFlow", "inaB_V"} else "batteryVoltage"
@@ -153,6 +160,87 @@ class ControllerEngine:
 
         current_data[display_key] = float(power) if enabled else 0.0
         current_data[f"{display_key}_state"] = 1 if enabled else 0
+
+    def _publish_cerpadlo(self, client, enabled, settings, delta_t, ohrev_min):
+        payload = {
+            "device": "cerpadlo",
+            "label": "Cerpadlo",
+            "state": "ON" if enabled else "OFF",
+            "enabled": enabled,
+            "source": "ohrev_kumulativni",
+            "source_value": round(ohrev_min, 1),
+            "off_threshold": _safe_float(settings.get("cerpadlo_vypni_deltaT", 10.0), 10.0),
+            "ohrev_min": round(ohrev_min, 1),
+            "max_min": _safe_float(settings.get("cerpadlo_max_min", 45.0), 45.0),
+            "delta_t": round(delta_t, 1),
+            "updated_at": int(time.time()),
+        }
+        client.publish("fve/spotrebice/cerpadlo/set", json.dumps(payload), retain=True)
+
+    def _tick_cerpadlo(self, client, settings, snapshot, now):
+        # Logika čerpadla:
+        #  - akumuluje dobu, kdy KOTEL TOPÍ (heating1_state_actual == 1)
+        #  - čerpadlo ZAPNE až po kumulativním ohřevu max_min minut
+        #  - čerpadlo VYPNE, když ΔT (vstup-výstup) klesne pod vypni_deltaT
+        #    (teplo je rozvedeno) → reset kumulativního ohřevu
+        #  - o půlnoci se kumulativní ohřev resetuje
+        vypni_deltaT = _safe_float(settings.get("cerpadlo_vypni_deltaT", 10.0), 10.0)
+        max_min = _safe_float(settings.get("cerpadlo_max_min", 45.0), 45.0)
+        min_beh_min = _safe_float(settings.get("cerpadlo_min_beh_min", 60.0), 60.0)
+
+        t_vstup = _safe_float(snapshot.get("podlahovka2200_teplota_vstup"), 0.0)
+        t_vystup = _safe_float(snapshot.get("podlahovka2200_teplota_vystup"), 0.0)
+        delta_t = t_vstup - t_vystup
+        kotel_topi = int(snapshot.get("heating1_state_actual", 0) or 0) == 1
+
+        current = bool(self.device_states.get("cerpadlo", False))
+        max_s = max_min * 60.0
+        min_beh_s = min_beh_min * 60.0
+
+        elapsed = now - self.cerpadlo_last_tick
+        self.cerpadlo_last_tick = now
+
+        # Reset kumulativního ohřevu o půlnoci
+        today = time.strftime("%Y-%m-%d", time.localtime(now))
+        if self.cerpadlo_last_day != today:
+            self.cerpadlo_last_day = today
+            self.cerpadlo_ohrev_accum = 0.0
+
+        # Akumulace doby, kdy kotel topí
+        if kotel_topi:
+            self.cerpadlo_ohrev_accum += elapsed
+
+        # Ruční override (z /cerpadlo/toggle)
+        manual_until = _safe_float(snapshot.get("cerpadlo_manual_until"), 0.0)
+        manual_state = bool(snapshot.get("cerpadlo_manual_state", False))
+        manual_active = now < manual_until
+
+        next_state = current
+        if manual_active:
+            next_state = manual_state
+        elif current:
+            # po zapnutí musí čerpadlo běžet aspoň min_beh_min, než se začne
+            # kontrolovat ΔT (jinak by se hned po zapnutí vypnulo — malé ΔT)
+            beh_s = now - self.cerpadlo_on_since if self.cerpadlo_on_since else 0.0
+            if beh_s >= min_beh_s and delta_t < vypni_deltaT:
+                next_state = False
+                self.cerpadlo_ohrev_accum = 0.0
+        else:
+            if self.cerpadlo_ohrev_accum >= max_s:
+                next_state = True
+
+        current_data["cerpadlo_deltaT"] = round(delta_t, 1)
+        current_data["cerpadlo_ohrev_min"] = round(self.cerpadlo_ohrev_accum / 60.0, 1)
+        current_data["cerpadlo_kotel_topi"] = 1 if kotel_topi else 0
+        current_data["cerpadlo_manual"] = 1 if manual_active else 0
+
+        if next_state != current:
+            self.device_states["cerpadlo"] = next_state
+            self.last_change["cerpadlo"] = now
+            self.cerpadlo_on_since = now if next_state else None
+            self._publish_cerpadlo(client, next_state, settings, delta_t, self.cerpadlo_ohrev_accum / 60.0)
+            return True
+        return False
 
     def tick(self, client):
         settings = get_form_settings()
@@ -223,6 +311,10 @@ class ControllerEngine:
 
             # Virivka: publikovat obě relé v jedné zprávě
             self._publish_virivka_combined(client, settings, selected_metric_name, selected_metric_value)
+
+            # Čerpadlo (eWeLink): logika podle ΔT kotle a kumulativního času
+            if self._tick_cerpadlo(client, settings, snapshot, now):
+                changed = True
 
             current_data["controller_source"] = selected_metric_name
             current_data["controller_value"] = selected_metric_value

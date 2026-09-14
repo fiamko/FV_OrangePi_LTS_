@@ -30,6 +30,9 @@ DEFAULT_FORM_SETTINGS = {
     "power_podlaha2200": 2200.0,
     "battery_capacity_ah": 300.0,
     "sample_interval_s": 10.0,
+    "cerpadlo_vypni_deltaT": 10.0,
+    "cerpadlo_max_min": 45.0,
+    "cerpadlo_min_beh_min": 60.0,
 }
 
 PAIR_RULES = [
@@ -62,7 +65,9 @@ def _normalize_settings(source_data):
         if key not in source_data:
             continue
 
-        if isinstance(default_value, str):
+        if isinstance(default_value, bool):
+            settings[key] = bool(source_data[key])
+        elif isinstance(default_value, str):
             settings[key] = str(source_data[key])
         else:
             settings[key] = float(source_data[key])
@@ -116,6 +121,15 @@ def validate_settings(settings):
     if settings["rizeni_podle"] not in {"batteryVoltage", "batteryFlow", "inaB_V"}:
         errors.append("Neznamy zdroj rizeni.")
 
+    if float(settings.get("cerpadlo_vypni_deltaT", 10.0)) < 0:
+        errors.append("Cerpadlo: deltaT pro vypnuti nesmi byt zaporna.")
+
+    if float(settings.get("cerpadlo_max_min", 45.0)) <= 0:
+        errors.append("Cerpadlo: kumulativni cas ohrevu musi byt kladny.")
+
+    if float(settings.get("cerpadlo_min_beh_min", 60.0)) <= 0:
+        errors.append("Cerpadlo: minimalni doba behu musi byt kladna.")
+
     return errors
 
 
@@ -124,6 +138,9 @@ def parse_form_settings(form_data):
     parsed = {}
 
     for key, default_value in DEFAULT_FORM_SETTINGS.items():
+        if isinstance(default_value, bool):
+            parsed[key] = key in form_data or str(form_data.get(key, "")).lower() in ("1", "true", "on", "yes")
+            continue
         raw_value = form_data.get(key, default_value)
         if isinstance(default_value, str):
             parsed[key] = str(raw_value)

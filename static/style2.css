@@ -207,6 +207,25 @@ body {
 .bojler { grid-area: bojler; }
 .podlaha2000 { grid-area: podlaha2000; }
 .podlaha300 { grid-area: podlaha300; }
+/* Indikátor čerpadla — malá ikona vedle podlahovky 2200 */
+.icon-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+.cerpadlo-ind {
+    position: absolute;
+    right: 100%;
+    margin-right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 11px;
+    height: 11px;
+    cursor: pointer;
+    color: #888;
+}
+.cerpadlo-ind.on { color: #1a1a1a; }
+.cerpadlo-ind.offline { color: #e94560; }
 
 /* Ikony */
 a.icon-link { display: block; line-height: 0; }

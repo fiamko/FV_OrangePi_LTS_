@@ -1,3 +1,5 @@
 Flask
 paho-mqtt
 smbus2
+pycryptodome
+zeroconf

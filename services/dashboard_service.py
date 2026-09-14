@@ -59,4 +59,12 @@ def transform_mqtt_to_js(mqtt_data):
     out["podlahovky_online"] = bool(mqtt_data.get("podlahovky_online", False))
     out["menic2_online"] = bool(mqtt_data.get("menic2_online", False))
 
+    # Čerpadlo (eWeLink)
+    out["cerpadlo"] = int(current_data.get("cerpadlo_vystup", 0) or 0)
+    out["cerpadloDeltaT"] = float(current_data.get("cerpadlo_deltaT", 0) or 0)
+    out["cerpadloOhrevMin"] = float(current_data.get("cerpadlo_ohrev_min", 0) or 0)
+    out["cerpadloKotelTopi"] = int(current_data.get("cerpadlo_kotel_topi", 0) or 0)
+    out["cerpadloDuvod"] = current_data.get("cerpadlo_duvod", "")
+    out["cerpadlo_online"] = bool(current_data.get("cerpadlo_online", False))
+
     return out

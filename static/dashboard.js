@@ -213,6 +213,16 @@ if (frame) {
         tempEl.className = 'virivka-temp' + (virivkaActual > 0 ? ' on' : '');
     }
 
+    // --- ČERPADLO (eWeLink) — malý indikátor vedle podlahovky 2200 ---
+    const cerpadloInd = document.getElementById('cerpadloInd');
+    if (cerpadloInd) {
+        const cerpadloOnline = data.cerpadlo_online !== false;
+        const cerpadloOn = (data.cerpadlo || 0) > 0;
+        cerpadloInd.classList.remove('on', 'offline');
+        if (!cerpadloOnline) cerpadloInd.classList.add('offline');
+        else if (cerpadloOn) cerpadloInd.classList.add('on');
+    }
+
     const menic2Icon = document.querySelector('.menic-right .icon');
     if (menic2Icon) {
         menic2Icon.classList.toggle('inactive', !data.menic2_online);
@@ -261,3 +271,24 @@ updateDateTime();
 setInterval(updateDateTime, 1000);
 setInterval(updateData, 2000);
 updateData();
+
+// --- Ruční přepnutí čerpadla (zaheslované) ---
+const cerpadloIndBtn = document.getElementById('cerpadloInd');
+if (cerpadloIndBtn) {
+    cerpadloIndBtn.addEventListener('click', function() {
+        const pwd = prompt('Heslo pro ruční přepnutí čerpadla:');
+        if (pwd === null || pwd === '') return;
+        const body = new URLSearchParams();
+        body.append('password', pwd);
+        fetch('/cerpadlo/toggle', { method: 'POST', body: body })
+            .then(r => r.json())
+            .then(res => {
+                if (res.ok) {
+                    updateData();
+                } else {
+                    alert(res.error || 'Chyba');
+                }
+            })
+            .catch(() => alert('Chyba spojení'));
+    });
+}

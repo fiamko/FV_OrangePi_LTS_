@@ -26,6 +26,9 @@
     "power_podlaha2200": 2200.0,
     "battery_capacity_ah": 300.0,
     "sample_interval_s": 10.0,
+    "cerpadlo_vypni_deltaT": 10.0,
+    "cerpadlo_max_min": 45.0,
+    "cerpadlo_min_beh_min": 60.0,
     "esp_devices": [
         {
             "name": "Vířivka",

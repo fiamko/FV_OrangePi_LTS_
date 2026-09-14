@@ -68,7 +68,7 @@ else
 fi
 
 # --- 6. Nakopirovani service souboru ---
-SERVICES=("fve-menic-reader.service" "fve-dashboard.service")
+SERVICES=("fve-menic-reader.service" "fve-dashboard.service" "fve-ewelink.service")
 for svc in "${SERVICES[@]}"; do
     src="$SOURCE_DIR/$svc"
     dst="$SERVICE_DIR/$svc"

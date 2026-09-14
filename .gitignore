@@ -5,6 +5,9 @@
 # --- Tajný soubor s hesly a tokeny (NIKDY necommitovat!) ---
 secrets.py
 
+# --- eWeLink bridge config (obsahuje device key — NIKDY necommitovat!) ---
+ewelink_config.json
+
 # --- Python ---
 __pycache__/
 *.py[cod]

@@ -143,6 +143,22 @@
       <label>Prikon podlaha 2200 (W):</label><input type="number" name="power_podlaha2200" value="{{ settings.power_podlaha2200 }}" min="0" max="5000" step="1">
     </div>
 
+    <div style="margin-top:18px;border-top:1px solid #333;padding-top:10px;">
+      <h2 style="color:#aaa;font-size:14px;margin:0 0 10px;">&#128260; Čerpadlo (eWeLink)</h2>
+    </div>
+
+    <div class="power-value">
+      <label>Vypni čerpadlo ΔT (°C):</label><input type="number" name="cerpadlo_vypni_deltaT" value="{{ settings.cerpadlo_vypni_deltaT }}" min="0" max="50" step="0.5">
+    </div>
+
+    <div class="power-value">
+      <label>Kumulativní ohřev pro zapnutí (min):</label><input type="number" name="cerpadlo_max_min" value="{{ settings.cerpadlo_max_min }}" min="1" max="240" step="1">
+    </div>
+
+    <div class="power-value">
+      <label>Min doba běhu po zapnutí (min):</label><input type="number" name="cerpadlo_min_beh_min" value="{{ settings.cerpadlo_min_beh_min }}" min="1" max="240" step="1">
+    </div>
+
     {% if esp_devices %}
     <div class="card" style="margin-top:20px;">
       <h2 style="color:#aaa;font-size:14px;margin:0 0 10px;border-bottom:1px solid #333;padding-bottom:5px;">🔧 ESP zařízení</h2>

@@ -46,6 +46,7 @@ Webová aplikace napsaná v Pythonu (Flask), která:
 | **ESP32 vířivka** | ESP32-32E N4 + 2× relé + SCT013 + DS18B20 | `192.168.0.106` |
 | **ESP32 podlahovka 2200W** | ESP32 + relé | `192.168.0.151` |
 | **ESP32 podlahovky** | ESP32 + 2× relé (budoucí) | `192.168.0.???` |
+| **Sonoff Basic R1** | eWeLink firmware — oběhové čerpadlo | `192.168.0.132` |
 
 ---
 
@@ -57,6 +58,9 @@ menic_web/
 ├── config.json               # Meze pro spínání spotřebičů, sezónní profily
 ├── mqtt_menic1.py            # Čtečka měniče přes /dev/ttyUSB0 → MQTT
 ├── ina226_mqtt.py            # Čtečka INA226 přes I²C → MQTT
+├── ewelink_mqtt.py           # eWeLink bridge (Sonoff) → MQTT
+├── ewelink_config.example.json  # Šablona configu bridge (device key)
+├── EWELINK.md                # Dokumentace eWeLink bridge
 ├── voltronic.py              # Knihovna pro komunikaci s měničem
 ├── requirements.txt          # Python závislosti
 ├── models/
@@ -88,6 +92,7 @@ menic_web/
     ├── systemd/               # Systemd služby
     │   ├── fve-dashboard.service
     │   ├── fve-menic-reader.service
+    │   ├── fve-ewelink.service
     │   └── tigervnc@.service
     └── caddy/                 # Reverzní proxy + HTTPS
         ├── Caddyfile
@@ -117,6 +122,7 @@ menic_web/
 | `fve/spotrebice/podlaha2200/set` | Podlaha 2200W |
 | `fve/spotrebice/bojler/set` | Bojler |
 | `fve/spotrebice/virivka/set` | Vířivka |
+| `fve/spotrebice/cerpadlo/set` | Oběhové čerpadlo (eWeLink) |
 
 ### Stav z ESP32
 | Topic | Směr | Obsah |
@@ -191,6 +197,16 @@ Každý ESP32:
   - **Offline** = zašedlá ikona
 
 ---
+
+## eWeLink bridge (Sonoff oběhové čerpadlo)
+
+Ovládání Sonoffu (originální eWeLink firmware) přes LAN **bez Tasmoty a bez cloud účtu** — podrobný postup viz [EWELINK.md](EWELINK.md).
+
+- Bridge `ewelink_mqtt.py` (služba `fve-ewelink`) ovládá relé přes HTTP `/zeroconf/*` (AES-128-CBC, klíč = MD5(devicekey)).
+- Stav se čte z **mDNS broadcast** (`_ewelink._tcp.local.`) — funguje obousměrně (příkaz i ruční změna z appky/tlačítka).
+- Automatika čerpadla v ControllerEngine: kotel topí → akumulace → zapnutí po 45 min → min. 60 min běhu → vypnutí při ΔT < 10 °C → reset o půlnoci.
+- **Nutné iptables pravidlo** pro UDP 5353 (mDNS) — viz EWELINK.md.
+- Device key se získá přes AP mód zařízení (`http://10.10.7.1/device`), ukládá se do `ewelink_config.json` (v `.gitignore`, **nikdy necommitovat**).
 
 ## Zabezpečení
 
