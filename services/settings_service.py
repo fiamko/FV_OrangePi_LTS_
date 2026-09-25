@@ -30,6 +30,8 @@ DEFAULT_FORM_SETTINGS = {
     "power_podlaha2200": 2200.0,
     "battery_capacity_ah": 300.0,
     "sample_interval_s": 10.0,
+    "ochrana_odberu": True,
+    "odber_limit_w": 10.0,
     "cerpadlo_vypni_deltaT": 10.0,
     "cerpadlo_max_min": 45.0,
     "cerpadlo_min_beh_min": 60.0,
@@ -129,6 +131,9 @@ def validate_settings(settings):
 
     if float(settings.get("cerpadlo_min_beh_min", 60.0)) <= 0:
         errors.append("Cerpadlo: minimalni doba behu musi byt kladna.")
+
+    if float(settings.get("odber_limit_w", 10.0)) < 0:
+        errors.append("Ochrana odberu: limit odberu nesmi byt zaporny.")
 
     return errors
 

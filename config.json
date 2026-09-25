@@ -29,6 +29,8 @@
     "cerpadlo_vypni_deltaT": 10.0,
     "cerpadlo_max_min": 45.0,
     "cerpadlo_min_beh_min": 60.0,
+    "ochrana_odberu": true,
+    "odber_limit_w": 10.0,
     "esp_devices": [
         {
             "name": "Vířivka",

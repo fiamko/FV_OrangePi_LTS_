@@ -1,6 +1,6 @@
 # FV_OrangePi_LTS_
 
-> Verze: 2026-08-12
+> Verze: 2026-09-25
 
 **FVE Dashboard pro OrangePi 3 LTS** — monitorování a řízení domácí fotovoltaické elektrárny přes webové rozhraní.
 
@@ -184,6 +184,8 @@ Veškeré meze pro spínání spotřebičů jsou v `config.json`. Dashboard podp
 | `rizeni_podle` | Metrika: `batteryVoltage`, `batteryFlow`, `inaB_V` |
 | `hystereze_s` | Minimální doba mezi změnami stavu |
 | `power_*` | Jmenovitý výkon spotřebiče (pro dopočet zatížení) |
+| `ochrana_odberu` | Blokovat vytěžování, když z měniče neteče žádný odběr (`true`/`false`) |
+| `odber_limit_w` | Práh odběru z měniče (W), pod kterým se vytěžování zablokuje |
 
 ---
 
@@ -213,6 +215,18 @@ Ovládání Sonoffu (originální eWeLink firmware) přes LAN **bez Tasmoty a be
 - MQTT broker pouze na LAN (`iptables` omezení na `192.168.0.0/24`)
 - Heslo pro nastavení v `secrets.py` (`SETTINGS_PASSWORD`) — **před nasazením změnit!**
 - Externí přístup přes Caddy + Cloudflare Tunnel (volitelné)
+
+---
+
+## Historie verzí
+
+### 2026-09-25 — Ochrana vytěžování bez odběru z měniče
+- Nová pojistka v řízení vytěžování: když z měniče neteče žádný odběr (domácnost je přepnutá na veřejnou síť), vytěžování se okamžitě odstaví, aby spotřebiče netopily ze sítě.
+- Odběr se čte z MQTT klíče `output_active_power` (W). Pod limitem (výchozí 10 W) se všechny vytěžovací spotřebiče vynutí do OFF.
+- Měnič 2 je z této ochrany **vyjmutý** — ovládá se ručně / mechanickým přepojováním.
+- Nové parametry v `config.json` a ve webovém nastavení:
+  - `ochrana_odberu` (bool, výchozí `true`) — zapnutí/vypnutí pojistky.
+  - `odber_limit_w` (W, výchozí `10.0`) — práh odběru pro blokaci.
 
 ---
 

@@ -255,6 +255,14 @@ class ControllerEngine:
         now = time.time()
         changed = False
 
+        # Ochrana vytěžování: když z měniče neteče žádný odběr (domácnost je
+        # přepnutá na veřejnou síť), blokovat spínání spotřebičů, aby netopily
+        # ze sítě. Odběr se bere z MQTT klíče output_active_power (W).
+        ochrana_odberu = bool(settings.get("ochrana_odberu", True))
+        odber_limit_w = _safe_float(settings.get("odber_limit_w", 10.0), 10.0)
+        inverter_load_w = _safe_float(snapshot.get("output_active_power", 0.0), 0.0)
+        odber_blok = ochrana_odberu and inverter_load_w < odber_limit_w
+
         with data_lock:
             for rule in DEVICE_RULES:
                 # Virivka pravidla — jen dashboard, MQTT publish se dělá kombinovaně na konci
@@ -273,6 +281,9 @@ class ControllerEngine:
                     else:
                         if source_value >= on_threshold and elapsed >= hysteresis_s:
                             next_state = True
+
+                    if odber_blok:
+                        next_state = False
 
                     self._set_dashboard_value(rule, next_state, settings)
 
@@ -296,6 +307,10 @@ class ControllerEngine:
                 else:
                     if source_value >= on_threshold and elapsed >= hysteresis_s:
                         next_state = True
+
+                # Menic 2 je z ochrany odberu vyjmut — ovlada se rucne/prepojovanim.
+                if odber_blok and rule["name"] != "menic2_rele":
+                    next_state = False
 
                 self._set_dashboard_value(rule, next_state, settings)
 

@@ -63,6 +63,19 @@
       <label>Kapacita baterie (Ah):</label><input type="number" name="battery_capacity_ah" value="{{ settings.battery_capacity_ah }}" min="1" max="2000" step="1">
     </div>
 
+    <div style="margin-top:18px;border-top:1px solid #333;padding-top:10px;">
+      <h2 style="color:#aaa;font-size:14px;margin:0 0 10px;">Ochrana vytěžování</h2>
+    </div>
+
+    <div class="power-value">
+      <label>Blokovat vytěžování bez odběru z měniče:</label>
+      <input type="checkbox" name="ochrana_odberu" {% if settings.ochrana_odberu %}checked{% endif %}>
+    </div>
+
+    <div class="power-value">
+      <label>Limit odběru z měniče (W):</label><input type="number" name="odber_limit_w" value="{{ settings.odber_limit_w }}" min="0" max="5000" step="1">
+    </div>
+
     <div class="power-value">
       <label>Zapni Podlaha300W (V):</label><input type="number" name="zapni4" value="{{ settings.zapni4 }}" min="24.00" max="28.00" step="0.01">
     </div>
