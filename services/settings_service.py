@@ -35,6 +35,7 @@ DEFAULT_FORM_SETTINGS = {
     "cerpadlo_vypni_deltaT": 10.0,
     "cerpadlo_max_min": 45.0,
     "cerpadlo_min_beh_min": 60.0,
+    "cerpadlo_off_persist_min": 2.0,
 }
 
 PAIR_RULES = [
@@ -131,6 +132,9 @@ def validate_settings(settings):
 
     if float(settings.get("cerpadlo_min_beh_min", 60.0)) <= 0:
         errors.append("Cerpadlo: minimalni doba behu musi byt kladna.")
+
+    if float(settings.get("cerpadlo_off_persist_min", 2.0)) <= 0:
+        errors.append("Cerpadlo: doba perzistence vypnuti musi byt kladna.")
 
     if float(settings.get("odber_limit_w", 10.0)) < 0:
         errors.append("Ochrana odberu: limit odberu nesmi byt zaporny.")

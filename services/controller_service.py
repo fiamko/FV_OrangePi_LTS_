@@ -97,6 +97,7 @@ class ControllerEngine:
         self.cerpadlo_last_tick = time.time()
         self.cerpadlo_last_day = None
         self.cerpadlo_on_since = None
+        self.cerpadlo_low_delta_since = time.time()
 
     def _get_metrics(self, snapshot, selected_metric):
         metric_key = selected_metric if selected_metric in {"batteryVoltage", "batteryFlow", "inaB_V"} else "batteryVoltage"
@@ -187,15 +188,19 @@ class ControllerEngine:
         vypni_deltaT = _safe_float(settings.get("cerpadlo_vypni_deltaT", 10.0), 10.0)
         max_min = _safe_float(settings.get("cerpadlo_max_min", 45.0), 45.0)
         min_beh_min = _safe_float(settings.get("cerpadlo_min_beh_min", 60.0), 60.0)
+        off_persist_min = _safe_float(settings.get("cerpadlo_off_persist_min", 2.0), 2.0)
 
+        esp_online = bool(snapshot.get("podlahovka2200_online", False))
         t_vstup = _safe_float(snapshot.get("podlahovka2200_teplota_vstup"), 0.0)
         t_vystup = _safe_float(snapshot.get("podlahovka2200_teplota_vystup"), 0.0)
+        teploty_valid = esp_online and t_vstup > 0.0 and t_vystup > 0.0
         delta_t = t_vstup - t_vystup
         kotel_topi = int(snapshot.get("heating1_state_actual", 0) or 0) == 1
 
         current = bool(self.device_states.get("cerpadlo", False))
         max_s = max_min * 60.0
         min_beh_s = min_beh_min * 60.0
+        off_persist_s = off_persist_min * 60.0
 
         elapsed = now - self.cerpadlo_last_tick
         self.cerpadlo_last_tick = now
@@ -222,9 +227,16 @@ class ControllerEngine:
             # po zapnutí musí čerpadlo běžet aspoň min_beh_min, než se začne
             # kontrolovat ΔT (jinak by se hned po zapnutí vypnulo — malé ΔT)
             beh_s = now - self.cerpadlo_on_since if self.cerpadlo_on_since else 0.0
-            if beh_s >= min_beh_s and delta_t < vypni_deltaT:
-                next_state = False
-                self.cerpadlo_ohrev_accum = 0.0
+            # Vypnutí jen při platných datech a když ΔT drží pod mezí souvisle
+            # off_persist_min — jinak jediný šumový vzorek (0/0) čerpadlo zbytečně
+            # vypne a vynuluje kumulativní ohřev.
+            low_delta = beh_s >= min_beh_s and teploty_valid and delta_t < vypni_deltaT
+            if low_delta:
+                if now - self.cerpadlo_low_delta_since >= off_persist_s:
+                    next_state = False
+                    self.cerpadlo_ohrev_accum = 0.0
+            else:
+                self.cerpadlo_low_delta_since = now
         else:
             if self.cerpadlo_ohrev_accum >= max_s:
                 next_state = True

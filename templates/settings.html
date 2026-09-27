@@ -172,6 +172,10 @@
       <label>Min doba běhu po zapnutí (min):</label><input type="number" name="cerpadlo_min_beh_min" value="{{ settings.cerpadlo_min_beh_min }}" min="1" max="240" step="1">
     </div>
 
+    <div class="power-value">
+      <label>Doba potvrzení vypnutí ΔT (min):</label><input type="number" name="cerpadlo_off_persist_min" value="{{ settings.cerpadlo_off_persist_min }}" min="0.5" max="30" step="0.5">
+    </div>
+
     {% if esp_devices %}
     <div class="card" style="margin-top:20px;">
       <h2 style="color:#aaa;font-size:14px;margin:0 0 10px;border-bottom:1px solid #333;padding-bottom:5px;">🔧 ESP zařízení</h2>
