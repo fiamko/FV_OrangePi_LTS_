@@ -248,6 +248,26 @@ if (frame) {
             img.classList.toggle('inactive', !data[onlineKey]);
         }
     });
+
+    // --- Pruh "balancing" + ikona B ---
+    var balancBar = document.getElementById('balancBar');
+    if (balancBar) {
+        var bs = data.balanc_state || 'off';
+        if (bs === 'off') {
+            balancBar.hidden = true;
+        } else {
+            balancBar.hidden = false;
+            balancBar.className = 'balanc-bar ' + bs;
+            var remain = Math.max(0, Math.round((data.balanc_remaining_s || 0) / 60));
+            balancBar.textContent = bs === 'waiting'
+                ? 'balancing \u2014 \u010dek\u00e1m na nap\u011bt\u00ed'
+                : 'balancing \u2014 ' + remain + ' min';
+        }
+    }
+    var balancBtn = document.getElementById('balancBtn');
+    if (balancBtn) {
+        balancBtn.classList.toggle('active', data.balanc_active);
+    }
 }
 //----------------------------------------------
 
@@ -271,6 +291,27 @@ updateDateTime();
 setInterval(updateDateTime, 1000);
 setInterval(updateData, 2000);
 updateData();
+
+// --- Ruční aktivace/zrušení balancování (zaheslované) ---
+const balancBtnEl = document.getElementById('balancBtn');
+if (balancBtnEl) {
+    balancBtnEl.addEventListener('click', function() {
+        const pwd = prompt('Heslo pro balancování:');
+        if (pwd === null || pwd === '') return;
+        const body = new URLSearchParams();
+        body.append('password', pwd);
+        fetch('/balanc/toggle', { method: 'POST', body: body })
+            .then(r => r.json())
+            .then(res => {
+                if (res.ok) {
+                    updateData();
+                } else {
+                    alert(res.error || 'Chyba');
+                }
+            })
+            .catch(() => alert('Chyba spojení'));
+    });
+}
 
 // --- Ruční přepnutí čerpadla (zaheslované) ---
 const cerpadloIndBtn = document.getElementById('cerpadloInd');

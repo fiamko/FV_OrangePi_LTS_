@@ -254,6 +254,44 @@ class ControllerEngine:
             return True
         return False
 
+    def _tick_balanc(self, snapshot, settings, now):
+        # Balancování článků baterie. Vraci True, pokud je aktivní a má se
+        # blokovat vytěžování spotřebičů. Stav se drží jen v paměti
+        # (current_data) — po restartu OPI se balancování zruší (bezpecne).
+        #
+        # Faze:
+        #   "waiting"   — aktivováno ručně, čeká na dosažení napětí balanc_voltaz
+        #   "balancing" — napětí dosaženo, běží odpočet balanc_doba_min minut
+        state = current_data.get("balanc_state", "off")
+        if state == "off":
+            current_data.pop("balanc_remaining_s", None)
+            return False
+
+        voltaz = _safe_float(settings.get("balanc_voltaz", 27.4), 27.4)
+        doba_s = _safe_float(settings.get("balanc_doba_min", 60.0), 60.0) * 60.0
+        batt_v = _safe_float(snapshot.get("battery_voltage"), 0.0)
+
+        if state == "waiting":
+            if batt_v >= voltaz:
+                # Napětí dosáhlo úrovně — start odpočtu
+                current_data["balanc_state"] = "balancing"
+                current_data["balanc_deadline"] = now + doba_s
+                current_data["balanc_remaining_s"] = doba_s
+            else:
+                current_data["balanc_remaining_s"] = 0.0
+        elif state == "balancing":
+            deadline = _safe_float(current_data.get("balanc_deadline"), 0.0)
+            if deadline and now >= deadline:
+                # Čas vypršel — návrat do normálu
+                current_data["balanc_state"] = "off"
+                current_data.pop("balanc_deadline", None)
+                current_data.pop("balanc_remaining_s", None)
+                return False
+            current_data["balanc_remaining_s"] = max(0.0, deadline - now)
+
+        current_data["balanc_voltaz"] = voltaz
+        return True
+
     def tick(self, client):
         settings = get_form_settings()
 
@@ -276,6 +314,8 @@ class ControllerEngine:
         odber_blok = ochrana_odberu and inverter_load_w < odber_limit_w
 
         with data_lock:
+            balanc_active = self._tick_balanc(snapshot, settings, now)
+
             for rule in DEVICE_RULES:
                 # Virivka pravidla — jen dashboard, MQTT publish se dělá kombinovaně na konci
                 if rule["name"] in ("virivka", "virivka2"):
@@ -295,6 +335,10 @@ class ControllerEngine:
                             next_state = True
 
                     if odber_blok:
+                        next_state = False
+
+                    # Balancování: vynutit vypnutí vířivky
+                    if balanc_active:
                         next_state = False
 
                     self._set_dashboard_value(rule, next_state, settings)
@@ -322,6 +366,11 @@ class ControllerEngine:
 
                 # Menic 2 je z ochrany odberu vyjmut — ovlada se rucne/prepojovanim.
                 if odber_blok and rule["name"] != "menic2_rele":
+                    next_state = False
+
+                # Balancování: vynutit vypnutí všech vytěžovaných spotřebičů
+                # (mimo měniče 2, který se ovládá ručně).
+                if balanc_active and rule["name"] != "menic2_rele":
                     next_state = False
 
                 self._set_dashboard_value(rule, next_state, settings)

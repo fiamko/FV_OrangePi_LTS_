@@ -39,3 +39,29 @@ def cerpadlo_toggle():
         current_data["cerpadlo_manual_until"] = _time.time() + 3600.0
 
     return jsonify({"ok": True, "state": "ON" if manual_state else "OFF", "manual_min": 60})
+
+
+@dashboard_bp.route("/balanc/toggle", methods=["POST"])
+def balanc_toggle():
+    """Ruční aktivace/zrušení balancování (zaheslované).
+
+    První klik (off -> waiting): čeká na dosažení napětí balanc_voltaz.
+    Další klik (waiting/balancing -> off): okamžitě zruší balancování.
+    """
+    if request.form.get("password", "") != current_app.config["SETTINGS_PASSWORD"]:
+        return jsonify({"ok": False, "error": "Spatne heslo"}), 401
+
+    with data_lock:
+        state = current_data.get("balanc_state", "off")
+        if state == "off":
+            current_data["balanc_state"] = "waiting"
+            current_data.pop("balanc_deadline", None)
+            current_data.pop("balanc_remaining_s", None)
+            new_state = "waiting"
+        else:
+            current_data["balanc_state"] = "off"
+            current_data.pop("balanc_deadline", None)
+            current_data.pop("balanc_remaining_s", None)
+            new_state = "off"
+
+    return jsonify({"ok": True, "state": new_state})

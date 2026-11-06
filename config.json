@@ -32,6 +32,8 @@
     "cerpadlo_off_persist_min": 2.0,
     "ochrana_odberu": true,
     "odber_limit_w": 10.0,
+    "balanc_voltaz": 27.4,
+    "balanc_doba_min": 60.0,
     "esp_devices": [
         {
             "name": "Vířivka",

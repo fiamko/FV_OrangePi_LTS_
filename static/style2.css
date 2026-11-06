@@ -426,6 +426,64 @@ a.icon-link { display: block; line-height: 0; }
     background: #0033ff;
 }
 
+/* Ikona B — balancování článků baterie */
+.balanc-btn {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1em;
+    background: #1c2e40;
+    color: #fff;
+    border: 1px solid #fff;
+    transition: all 0.3s ease;
+}
+.balanc-btn:hover {
+    background: #e94560;
+}
+.balanc-btn.active {
+    background: #e94560;
+}
+
+/* Pruh "balancing" — ve spodní části dashboardu */
+.balanc-bar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.1em;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: #000;
+    z-index: 20;
+    pointer-events: none;
+    transition: background 0.4s ease;
+}
+/* Čekání na napětí — oranžová až žlutá */
+.balanc-bar.waiting {
+    background: #f0a500;
+    color: #000;
+}
+/* Odpočet běží — červená */
+.balanc-bar.balancing {
+    background: #e94560;
+    color: #fff;
+    animation: balanc-blink 1.2s ease-in-out infinite;
+}
+@keyframes balanc-blink {
+    0%, 100% { background: #e94560; }
+    50% { background: #b42b45; }
+}
+
 /* Tablet optimizace */
 @media (min-width: 768px) and (max-width: 1024px) {
     .battery-shell {

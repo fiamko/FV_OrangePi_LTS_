@@ -32,6 +32,8 @@ DEFAULT_FORM_SETTINGS = {
     "sample_interval_s": 10.0,
     "ochrana_odberu": True,
     "odber_limit_w": 10.0,
+    "balanc_voltaz": 27.4,
+    "balanc_doba_min": 60.0,
     "cerpadlo_vypni_deltaT": 10.0,
     "cerpadlo_max_min": 45.0,
     "cerpadlo_min_beh_min": 60.0,
@@ -138,6 +140,12 @@ def validate_settings(settings):
 
     if float(settings.get("odber_limit_w", 10.0)) < 0:
         errors.append("Ochrana odberu: limit odberu nesmi byt zaporny.")
+
+    if float(settings.get("balanc_voltaz", 27.4)) <= 0:
+        errors.append("Balancovani: napetova uroven musi byt kladna.")
+
+    if float(settings.get("balanc_doba_min", 60.0)) <= 0:
+        errors.append("Balancovani: doba musi byt kladna.")
 
     return errors
 

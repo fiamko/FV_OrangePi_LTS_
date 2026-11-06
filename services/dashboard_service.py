@@ -67,4 +67,10 @@ def transform_mqtt_to_js(mqtt_data):
     out["cerpadloDuvod"] = current_data.get("cerpadlo_duvod", "")
     out["cerpadlo_online"] = bool(current_data.get("cerpadlo_online", False))
 
+    # Balancování článků baterie
+    out["balanc_state"] = current_data.get("balanc_state", "off")
+    out["balanc_active"] = out["balanc_state"] in ("waiting", "balancing")
+    out["balanc_remaining_s"] = float(current_data.get("balanc_remaining_s", 0) or 0)
+    out["balanc_voltaz"] = float(current_data.get("balanc_voltaz", 0) or 0)
+
     return out
