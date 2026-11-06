@@ -1,6 +1,6 @@
 # FV_OrangePi_LTS_
 
-> Version: 2026-09-28
+> Version: 2026-11-06
 
 **FVE Dashboard for the OrangePi 3 LTS** — monitoring and control of a home photovoltaic power plant through a web interface.
 
@@ -190,6 +190,20 @@ All appliance switching thresholds are in `config.json`. The dashboard supports 
 | `cerpadlo_max_min` | Cumulative heating minutes before the pump switches on |
 | `cerpadlo_min_beh_min` | Minimum pump runtime after switch-on (minutes) |
 | `cerpadlo_off_persist_min` | How long ΔT must stay below the threshold before the pump stops (minutes) |
+| `balanc_voltaz` | Battery voltage level (V) for cell balancing — when reached, the balancing timer starts |
+| `balanc_doba_min` | Balancing duration (minutes) — harvesting stays off this long after the voltage is reached |
+
+---
+
+## Battery cell balancing
+
+The `B` button next to *Nastavení* / *Statistiky* temporarily disconnects **all harvesting** (floor heating, boiler, hot tub) so the battery voltage can rise to the balancer level and equalise the cells. Household, the eWeLink circulation pump and inverter 2 are **not** affected.
+
+- Click **B** → password → balancing is *armed* (orange bar, "balancing").
+- When `balanc_voltaz` is reached → the timer starts counting `balanc_doba_min` (red bar).
+- After the time elapses → everything returns to normal automatically.
+- A second click on **B** (password) cancels balancing early.
+- The state is held in memory only — an OPI restart cancels balancing (fail-safe).
 
 ---
 
@@ -224,6 +238,13 @@ Control of a Sonoff (original eWeLink firmware) over LAN **without Tasmota and w
 
 ## Version history
 
+### 2026-11-06 — Battery cell balancing
+- New `B` button on the dashboard: temporarily disconnects all harvesting so the battery voltage can rise to the balancer level and equalise the cells. Orange bar = waiting for the voltage, red bar = countdown running, then automatic return to normal.
+- Household, the eWeLink pump and inverter 2 are not affected. State is memory-only (an OPI restart cancels balancing).
+- New parameters in `config.json` and the web settings:
+  - `balanc_voltaz` (V, default `27.4`) — voltage level that starts the balancing timer.
+  - `balanc_doba_min` (min, default `60.0`) — how long harvesting stays off.
+
 ### 2026-09-28 — Pump false-shutdown protection
 - The circulation pump controller (`_tick_cerpadlo`) now ignores invalid temperatures (ESP offline / temperature 0) and only switches the pump off when ΔT stays below the threshold continuously for `cerpadlo_off_persist_min` (2 min). A transient `0/0` reading no longer falsely stops the pump.
 - New parameter `cerpadlo_off_persist_min` in `config.json` and the web settings.
@@ -246,7 +267,7 @@ MIT — do whatever you want with it.
 
 # FV_OrangePi_LTS_
 
-> Verze: 2026-09-28
+> Verze: 2026-11-06
 
 **FVE Dashboard pro OrangePi 3 LTS** — monitorování a řízení domácí fotovoltaické elektrárny přes webové rozhraní.
 
@@ -436,6 +457,20 @@ Veškeré meze pro spínání spotřebičů jsou v `config.json`. Dashboard podp
 | `cerpadlo_max_min` | Kumulativní minuty ohřevu před zapnutím čerpadla |
 | `cerpadlo_min_beh_min` | Minimální doba běhu čerpadla po zapnutí (minuty) |
 | `cerpadlo_off_persist_min` | Jak dlouho musí ΔT držet pod mezí, než se čerpadlo vypne (minuty) |
+| `balanc_voltaz` | Napěťová úroveň baterie (V) pro balancování — při dosažení se spustí odpočet |
+| `balanc_doba_min` | Doba balancování (minuty) — tak dlouho zůstane vytěžování vypnuté |
+
+---
+
+## Balancování článků baterie
+
+Tlačítko **B** vedle *Nastavení* / *Statistiky* dočasně odpojí **veškeré vytěžování** (podlahovky, bojler, vířivka), aby napětí baterie mohlo vystoupat na úroveň balancéru a srovnat články. Domácnost, oběhové čerpadlo eWeLink a měnič 2 **nejsou** dotčeny.
+
+- Klik na **B** → heslo → balancování je *nastartováno* (oranžový pruh, "balancing").
+- Po dosažení `balanc_voltaz` se spustí odpočet `balanc_doba_min` (červený pruh).
+- Po uplynutí času se vše automaticky vrátí do normálu.
+- Druhý klik na **B** (heslo) balancování předčasně zruší.
+- Stav je jen v paměti — restart OPI balancování zruší (bezpečné).
 
 ---
 
@@ -469,6 +504,13 @@ Ovládání Sonoffu (originální eWeLink firmware) přes LAN **bez Tasmoty a be
 ---
 
 ## Historie verzí
+
+### 2026-11-06 — Balancování článků baterie
+- Nové tlačítko **B** na dashboardu: dočasně odpojí veškeré vytěžování, aby napětí baterie mohlo vystoupat na úroveň balancéru a srovnat články. Oranžový pruh = čekání na napětí, červený = běží odpočet, pak automatický návrat do normálu.
+- Domácnost, čerpadlo eWeLink a měnič 2 nejsou dotčeny. Stav je jen v paměti (restart OPI balancování zruší).
+- Nové parametry v `config.json` a ve webovém nastavení:
+  - `balanc_voltaz` (V, výchozí `27.4`) — napěťová úroveň, která spustí odpočet balancování.
+  - `balanc_doba_min` (min, výchozí `60.0`) — jak dlouho zůstane vytěžování vypnuté.
 
 ### 2026-09-28 — Ochrana proti falešnému vypnutí čerpadla
 - Řízení oběhového čerpadla (`_tick_cerpadlo`) nově ignoruje neplatné teploty (ESP offline / teplota 0) a vypíná čerpadlo až když ΔT drží pod mezí souvisle `cerpadlo_off_persist_min` (2 min). Přechodné čtení `0/0` už čerpadlo falešně nezastaví.

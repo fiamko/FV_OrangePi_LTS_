@@ -1,6 +1,6 @@
 # MANUAL — FVE Dashboard for the OrangePi 3 LTS
 
-> Version: 2026-09-28 | Operation and understanding of the whole system
+> Version: 2026-11-06 | Operation and understanding of the whole system
 
 ---
 
@@ -61,6 +61,8 @@ ESP32 (e.g. `http://192.168.0.106`), where detailed diagnostics are available.
 | **cerpadlo_max_min** | Cumulative heating minutes before the pump switches on |
 | **cerpadlo_min_beh_min** | Minimum pump runtime after switch-on (minutes) |
 | **cerpadlo_off_persist_min** | How long ΔT must stay below the threshold before the pump stops (minutes) |
+| **balanc_voltaz** | Battery voltage (V) that starts the balancing timer |
+| **balanc_doba_min** | Balancing duration (minutes) — harvesting stays off this long |
 
 ### Seasonal profiles
 
@@ -125,6 +127,25 @@ File: `services/controller_service.py`, method `_tick_cerpadlo`. Details in [EWE
 
 Only **valid** temperatures switch the pump off (ESP online + temperatures > 0) — a
 transient `0/0` reading cannot falsely stop the pump.
+
+---
+
+## Battery cell balancing
+
+File: `services/controller_service.py`, method `_tick_balanc`.
+
+When the battery cells are out of balance, the balancer needs the voltage to rise to its
+level — but harvesting normally consumes the surplus first. The **B** button (next to
+*Nastavení* / *Statistiky*) temporarily disconnects all harvesting so the battery can
+charge to the balancing voltage.
+
+1. Click **B** → password → balancing is *armed* (`waiting`): the orange bar "balancing" shows, and all harvesting appliances (floor heating, boiler, hot tub) are forced OFF.
+2. When the battery voltage reaches `balanc_voltaz` → the timer starts (`balancing`): the bar turns red and counts down `balanc_doba_min`.
+3. After the time elapses → everything returns to normal automatically, the bar disappears.
+4. A second click on **B** (password) cancels balancing early.
+
+Household, the eWeLink circulation pump and inverter 2 are **not** affected. The state is
+held in memory only — an OPI restart cancels balancing (fail-safe).
 
 ---
 
@@ -265,13 +286,13 @@ sudo systemctl restart fve-menic-reader fve-dashboard
 
 ---
 
-*Last updated: 28. 9. 2026*
+*Last updated: 6. 11. 2026*
 
 ---
 
 # MANUÁL — FVE Dashboard pro OrangePi 3 LTS
 
-> Verze: 2026-09-28 | Obsluha a pochopení celého systému
+> Verze: 2026-11-06 | Obsluha a pochopení celého systému
 
 ---
 
@@ -332,6 +353,8 @@ ESP32 (např. `http://192.168.0.106`), kde je detailní diagnostika.
 | **cerpadlo_max_min** | Kumulativní minuty ohřevu před zapnutím čerpadla |
 | **cerpadlo_min_beh_min** | Minimální doba běhu čerpadla po zapnutí (minuty) |
 | **cerpadlo_off_persist_min** | Jak dlouho musí ΔT držet pod mezí, než se čerpadlo vypne (minuty) |
+| **balanc_voltaz** | Napětí baterie (V), které spustí odpočet balancování |
+| **balanc_doba_min** | Doba balancování (minuty) — tak dlouho zůstane vytěžování vypnuté |
 
 ### Sezónní profily
 
@@ -397,6 +420,25 @@ Soubor: `services/controller_service.py`, metoda `_tick_cerpadlo`. Podrobnosti v
 
 Čerpadlo vypne jen při **platných** teplotách (ESP online + teploty > 0) — přechodné
 čtení `0/0` nemůže čerpadlo falešně zastavit.
+
+---
+
+## Balancování článků baterie
+
+Soubor: `services/controller_service.py`, metoda `_tick_balanc`.
+
+Když jsou články baterie rozbalancované, balancér potřebuje, aby napětí vystoupalo na
+svou úroveň — jenže vytěžování normálně spotřebuje přebytek dřív. Tlačítko **B** (vedle
+*Nastavení* / *Statistiky*) dočasně odpojí veškeré vytěžování, aby se baterie mohla
+nabít na balancovací napětí.
+
+1. Klik na **B** → heslo → balancování je *nastartováno* (`waiting`): zobrazí se oranžový pruh "balancing" a všechny vytěžovací spotřebiče (podlahovky, bojler, vířivka) se vynutí do OFF.
+2. Když napětí baterie dosáhne `balanc_voltaz` → spustí se odpočet (`balancing`): pruh zčervená a odpočítává `balanc_doba_min`.
+3. Po uplynutí času se vše automaticky vrátí do normálu, pruh zmizí.
+4. Druhý klik na **B** (heslo) balancování předčasně zruší.
+
+Domácnost, oběhové čerpadlo eWeLink a měnič 2 **nejsou** dotčeny. Stav je jen v paměti —
+restart OPI balancování zruší (bezpečné).
 
 ---
 
@@ -537,4 +579,4 @@ sudo systemctl restart fve-menic-reader fve-dashboard
 
 ---
 
-*Poslední aktualizace: 28. 9. 2026*
+*Poslední aktualizace: 6. 11. 2026*

@@ -428,15 +428,15 @@ a.icon-link { display: block; line-height: 0; }
 
 /* Ikona B — balancování článků baterie */
 .balanc-btn {
-    width: 30px;
-    height: 30px;
+    width: 22px;
+    height: 22px;
     padding: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     border-radius: 6px;
     cursor: pointer;
-    font-size: 1em;
+    font-size: 0.9em;
     background: #1c2e40;
     color: #fff;
     border: 1px solid #fff;
