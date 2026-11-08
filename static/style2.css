@@ -460,8 +460,8 @@ a.icon-link { display: block; line-height: 0; }
     align-items: center;
     justify-content: center;
     font-weight: bold;
-    font-size: 1.1em;
-    letter-spacing: 4px;
+    font-size: 0.55em;
+    letter-spacing: 2px;
     text-transform: uppercase;
     color: #000;
     z-index: 20;
