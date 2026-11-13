@@ -468,6 +468,10 @@ a.icon-link { display: block; line-height: 0; }
     pointer-events: none;
     transition: background 0.4s ease;
 }
+/* Atribut hidden musí pruh opravdu skrýt — jinak by ho display:flex přebil */
+.balanc-bar[hidden] {
+    display: none;
+}
 /* Čekání na napětí — oranžová až žlutá */
 .balanc-bar.waiting {
     background: #f0a500;
