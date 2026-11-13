@@ -301,6 +301,46 @@ setInterval(updateDateTime, 1000);
 setInterval(updateData, 2000);
 updateData();
 
+
+// --- Stav certifikátu (vyskakovací okno po obnově) ---
+function updateCertStatus() {
+    fetch('/cert-status')
+        .then(function(r) { return r.json(); })
+        .then(function(s) {
+            var popup = document.getElementById('cert-popup');
+            var msgEl = document.getElementById('cert-popup-msg');
+            var box = document.getElementById('cert-popup-box');
+            if (!popup || !msgEl || !box) return;
+            var dl = (s.days_left !== null && s.days_left !== undefined) ? s.days_left : null;
+            var show = false, msg = '', bg = '#1a1a2e', bd = '#333';
+            if (s.result === 'failed') {
+                show = true; bg = '#3a1414'; bd = '#7a1f1f';
+                msg = 'Obnova certifikátu SELHALA!';
+                if (dl !== null) msg += ' Vyprší za ' + dl + ' dní.';
+            } else if (dl !== null && dl < 20) {
+                show = true; bg = '#3a2f14'; bd = '#7a5c00';
+                msg = 'Certifikát vyprší za ' + dl + ' dní — zkontrolujte obnovu.';
+            } else if (s.last_run && s.last_run !== localStorage.getItem('cert_ack')) {
+                show = true; bg = '#143a1f'; bd = '#1d5c2a';
+                msg = 'Certifikát obnoven v pořádku, vyprší za ' + (dl !== null ? dl : '?') + ' dní.';
+                localStorage.setItem('cert_ack', s.last_run);
+            }
+            if (show) {
+                msgEl.textContent = msg;
+                box.style.background = bg;
+                box.style.borderColor = bd;
+                popup.style.display = 'flex';
+            }
+        })
+        .catch(function() {});
+}
+updateCertStatus();
+var certPopupOk = document.getElementById('cert-popup-ok');
+if (certPopupOk) certPopupOk.addEventListener('click', function() {
+    var p = document.getElementById('cert-popup');
+    if (p) p.style.display = 'none';
+});
+
 // --- Ruční aktivace/zrušení balancování (zaheslované) ---
 const balancBtnEl = document.getElementById('balancBtn');
 if (balancBtnEl) {

@@ -1,3 +1,6 @@
+import datetime
+import subprocess
+
 from flask import Blueprint, current_app, jsonify, make_response, render_template, request
 
 from models.state import current_data, data_lock
@@ -65,3 +68,52 @@ def balanc_toggle():
             new_state = "off"
 
     return jsonify({"ok": True, "state": new_state})
+
+
+CERT_FILE = "/etc/caddy/fve-bundle.crt"
+STATUS_FILE = "/home/fiam/.lego/renewal-status.txt"
+
+
+def _cert_status():
+    days_left = None
+    not_after = None
+    try:
+        out = subprocess.check_output(
+            ["openssl", "x509", "-in", CERT_FILE, "-noout", "-enddate"],
+            stderr=subprocess.DEVNULL, timeout=5,
+        ).decode().strip()
+        raw = out.split("=", 1)[1].replace(" GMT", "").strip()
+        dt = datetime.datetime.strptime(raw, "%b %d %H:%M:%S %Y")
+        dt = dt.replace(tzinfo=datetime.timezone.utc)
+        days_left = (dt - datetime.datetime.now(datetime.timezone.utc)).days
+        not_after = dt.strftime("%Y-%m-%d")
+    except Exception:
+        pass
+
+    result = "unknown"
+    last_run = None
+    detail = ""
+    try:
+        with open(STATUS_FILE) as fh:
+            parts = fh.read().strip().split("|")
+        if parts and parts[0]:
+            result = parts[0]
+        if len(parts) > 1:
+            last_run = parts[1]
+        if len(parts) > 2:
+            detail = parts[2]
+    except Exception:
+        pass
+
+    return {
+        "days_left": days_left,
+        "not_after": not_after,
+        "result": result,
+        "last_run": last_run,
+        "detail": detail,
+    }
+
+
+@dashboard_bp.route("/cert-status")
+def cert_status():
+    return jsonify(_cert_status())

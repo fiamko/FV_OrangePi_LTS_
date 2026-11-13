@@ -16,6 +16,12 @@
     <meta name="mobile-web-app-capable" content="yes">
 </head>
 <body>
+    <div id="cert-popup" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.55); z-index:9999; align-items:center; justify-content:center;">
+        <div id="cert-popup-box" style="background:#1a1a2e; color:#eee; border:1px solid #333; border-radius:10px; padding:22px 26px; max-width:88%; box-shadow:0 8px 30px rgba(0,0,0,0.5); text-align:center;">
+            <div id="cert-popup-msg" style="font-size:15px; line-height:1.45; margin-bottom:18px;"></div>
+            <button id="cert-popup-ok" style="background:#4ea3cc; color:#0f0f1a; border:none; border-radius:6px; padding:8px 28px; font-size:14px; font-weight:600; cursor:pointer;">OK</button>
+        </div>
+    </div>
     <div class="battery-shell">
         <div id="battery-fill"></div>
         <div class="container">
