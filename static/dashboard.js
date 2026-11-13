@@ -2,6 +2,7 @@
 
 var podlahovka2200_lastDuvod = "";
 var podlahovka2200_duvodUntil = 0;
+var balanc_stopped_until = 0; // timestamp, do kdy zobrazovat hlášku "balancování zastaveno" po ručním vypnutí
 
 function updateDateTime() {
     const el = document.getElementById('datetime');
@@ -254,7 +255,15 @@ if (frame) {
     if (balancBar) {
         var bs = data.balanc_state || 'off';
         if (bs === 'off') {
-            balancBar.hidden = true;
+            // Po ručním vypnutí krátce ukazujeme "balancování zastaveno",
+            // teprve pak pruh zmizí. Jinak rovnou skryjeme.
+            if (Date.now() < balanc_stopped_until) {
+                balancBar.hidden = false;
+                balancBar.className = 'balanc-bar stopped';
+                balancBar.textContent = 'balancování zastaveno';
+            } else {
+                balancBar.hidden = true;
+            }
         } else {
             balancBar.hidden = false;
             balancBar.className = 'balanc-bar ' + bs;
@@ -304,6 +313,13 @@ if (balancBtnEl) {
             .then(r => r.json())
             .then(res => {
                 if (res.ok) {
+                    // Ruční vypnutí: zapamatuj si čas, po který ukazovat
+                    // "balancování zastaveno", a hned odbarvi ikonu B.
+                    if (res.state === 'off') {
+                        balanc_stopped_until = Date.now() + 5000;
+                        var ikonaB = document.getElementById('balancBtn');
+                        if (ikonaB) ikonaB.classList.remove('active');
+                    }
                     updateData();
                 } else {
                     alert(res.error || 'Chyba');

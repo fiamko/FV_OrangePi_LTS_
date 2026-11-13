@@ -473,6 +473,11 @@ a.icon-link { display: block; line-height: 0; }
     background: #f0a500;
     color: #000;
 }
+/* Ruční zastavení — zelená, krátce se zobrazí a pak zmizí */
+.balanc-bar.stopped {
+    background: #2ecc71;
+    color: #000;
+}
 /* Odpočet běží — červená */
 .balanc-bar.balancing {
     background: #e94560;
