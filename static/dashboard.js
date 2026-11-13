@@ -224,6 +224,11 @@ if (frame) {
         else if (cerpadloOn) cerpadloInd.classList.add('on');
     }
 
+    // Měnič 1 a 2 — zašednutí ikony, když měnič nepublikuje data (je vypnutý)
+    const menic1Icon = document.querySelector('.menic-left .icon');
+    if (menic1Icon) {
+        menic1Icon.classList.toggle('inactive', !data.menic1_online);
+    }
     const menic2Icon = document.querySelector('.menic-right .icon');
     if (menic2Icon) {
         menic2Icon.classList.toggle('inactive', !data.menic2_online);
@@ -275,7 +280,9 @@ if (frame) {
     }
     var balancBtn = document.getElementById('balancBtn');
     if (balancBtn) {
-        balancBtn.classList.toggle('active', data.balanc_active);
+        // Po ručním vypnutí drž ikonu odbarvenou, i kdyby dorazila stará data
+        var manualOff = Date.now() < balanc_stopped_until;
+        balancBtn.classList.toggle('active', data.balanc_active && !manualOff);
     }
 }
 //----------------------------------------------
@@ -359,6 +366,9 @@ if (balancBtnEl) {
                         balanc_stopped_until = Date.now() + 5000;
                         var ikonaB = document.getElementById('balancBtn');
                         if (ikonaB) ikonaB.classList.remove('active');
+                    } else {
+                        // Zapnutí — zruš dobu zobrazování "zastaveno"
+                        balanc_stopped_until = 0;
                     }
                     updateData();
                 } else {

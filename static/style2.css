@@ -442,8 +442,12 @@ a.icon-link { display: block; line-height: 0; }
     border: 1px solid #fff;
     transition: all 0.3s ease;
 }
-.balanc-btn:hover {
-    background: #e94560;
+/* Hover jen na zařízeních se skutečným hoverem (myš) — na dotykových
+   displejích zůstával :hover "přilepený" a ikona B svítila červeně i po vypnutí. */
+@media (hover: hover) {
+    .balanc-btn:hover {
+        background: #e94560;
+    }
 }
 .balanc-btn.active {
     background: #e94560;

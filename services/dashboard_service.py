@@ -57,6 +57,7 @@ def transform_mqtt_to_js(mqtt_data):
     out["virivka_online"] = bool(mqtt_data.get("virivka_online", False))
     out["podlahovka2200_online"] = bool(mqtt_data.get("podlahovka2200_online", False))
     out["podlahovky_online"] = bool(mqtt_data.get("podlahovky_online", False))
+    out["menic1_online"] = bool(mqtt_data.get("menic1_online", False))
     out["menic2_online"] = bool(mqtt_data.get("menic2_online", False))
 
     # Čerpadlo (eWeLink)

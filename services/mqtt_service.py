@@ -12,6 +12,10 @@ from services.settings_service import get_form_settings
 
 TOPIC_PREFIXES = ("menic/1/data/", "baterie/data/")
 
+# Po této době bez dat z měniče ho považujeme za vypnutý (zašednutí ikony).
+# Čtečka mqtt_menic1.py publikuje každých ~5 s, takže 20 s = 4 zmeškané cykly.
+MENIC_TIMEOUT_S = 20.0
+
 
 def on_connect(client, userdata, flags, rc, properties=None):
     if rc != 0:
@@ -162,10 +166,16 @@ def on_message(client, userdata, msg):
                         current_data["cerpadlo_vystup"] = 0
             return
 
-        # === Data z měniče 2 — jen detekce online ===
+        # === Data z měničů 1 a 2 — detekce online + čas poslední zprávy ===
+        if msg.topic == "menic/1/data":
+            with data_lock:
+                current_data["menic1_online"] = True
+                current_data["menic1_last_seen"] = time.time()
+            # Propustit do obecného handleru pro uložení hodnot
         if msg.topic == "menic/2/data":
             with data_lock:
                 current_data["menic2_online"] = True
+                current_data["menic2_last_seen"] = time.time()
             # Propustit do obecného handleru pro uložení hodnot
             # (ne return — ať se data uloží do current_data)
 
@@ -245,6 +255,15 @@ def mqtt_worker():
     while True:
         try:
             now = time.time()
+
+            # Detekce vypnutých měničů: když nepřišla data déle než
+            # MENIC_TIMEOUT_S, označ měnič jako offline (zašednutí ikony).
+            with data_lock:
+                if "menic1_last_seen" in current_data and now - current_data["menic1_last_seen"] > MENIC_TIMEOUT_S:
+                    current_data["menic1_online"] = False
+                if "menic2_last_seen" in current_data and now - current_data["menic2_last_seen"] > MENIC_TIMEOUT_S:
+                    current_data["menic2_online"] = False
+
             settings = get_form_settings()
 
             if ina and now >= ina_retry_at and now - last_ina_read >= 4.0:
